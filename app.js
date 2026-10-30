@@ -1,4 +1,4 @@
-/* ScientificGlossary Web v0.1 — local-first PWA prototype */
+/* ScientificGlossary Web v0.2 — PDF import & storage fix */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -25,11 +25,11 @@
     sourceInfo: $('sourceInfo'), pageSource: $('pageSource'), dictionaryStatus: $('dictionaryStatus'), toast: $('toast'),
   };
 
-  function showToast(message) {
+  function showToast(message, duration = 4500) {
     elements.toast.textContent = message;
     elements.toast.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => elements.toast.classList.remove('show'), 2600);
+    toastTimer = setTimeout(() => elements.toast.classList.remove('show'), duration);
   }
   function makeId() { return (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`); }
   function openDb() {
@@ -105,35 +105,71 @@
   }
   async function refreshDocuments() { renderDocuments(await dbAll('documents')); }
 
+  // PDF.js can transfer the Uint8Array to its worker. That detaches the
+  // ArrayBuffer; never give PDF.js the only copy that we intend to store.
+  // Source: https://mozilla.github.io/pdf.js/api/draft/module-pdfjsLib.html
   async function handlePdfUpload(file) {
     if (!file) return;
-    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) { showToast('Пожалуйста, выберите PDF-файл.'); return; }
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      showToast('Пожалуйста, выберите файл PDF.'); return;
+    }
+    let stage = 'read';
     try {
-      const data = await file.arrayBuffer();
-      const loading = pdfjsLib.getDocument({ data: new Uint8Array(data) });
-      const loaded = await loading.promise;
-      const doc = { id: makeId(), name: file.name, size: file.size, addedAt: Date.now(), pages: loaded.numPages, data };
+      showToast('Читаю файл PDF…');
+      const originalData = await file.arrayBuffer();
+      if (!originalData.byteLength) throw new Error('Файл пуст.');
+      // The independent copy may be transferred; originalData stays intact.
+      stage = 'parse';
+      const task = pdfjsLib.getDocument({ data: new Uint8Array(originalData.slice(0)) });
+      const loaded = await task.promise;
+      const numPages = loaded.numPages;
+      if (!numPages) throw new Error('В документе не обнаружены страницы.');
+      // Releasing the validation document does not affect our saved bytes.
+      try { await loaded.destroy(); } catch (_) { /* best effort */ }
+
+      stage = 'save';
+      const doc = {
+        id: makeId(), name: file.name, size: originalData.byteLength,
+        addedAt: Date.now(), pages: numPages, data: originalData,
+      };
       await dbPut('documents', doc);
-      await openDocument(doc.id);
       await refreshDocuments();
-      showToast('PDF добавлен в локальную библиотеку.');
+      stage = 'open';
+      const opened = await openDocument(doc.id);
+      if (opened) showToast('PDF добавлен в библиотеку и открыт.', 3200);
+      else showToast('PDF сохранён, но страницу не удалось отобразить. Подробности в консоли.', 6000);
     } catch (error) {
-      console.error(error); showToast('Не удалось открыть PDF. Возможно, файл защищён паролем или повреждён.');
+      console.error('PDF import failed at stage:', stage, error);
+      const name = error?.name || '';
+      let msg;
+      if (name === 'PasswordException') msg = 'Этот PDF защищён паролем. Откройте файл без защиты.';
+      else if (name === 'InvalidPDFException' || name === 'MissingPDFException') msg = 'Не удалось прочитать формат PDF. Проверьте документ.';
+      else if (name === 'QuotaExceededError') msg = 'Недостаточно свободного места в браузере для сохранения PDF.';
+      else if (stage === 'save' || name === 'DataCloneError') msg = 'PDF прочитан, но браузер не смог сохранить его. Проверьте разрешения и свободное место.';
+      else msg = `Ошибка при загрузке PDF (${stage}): ${String(error?.message || name || 'неизвестная причина').slice(0, 150)}`;
+      showToast(msg, 8000);
     } finally { elements.pdfInput.value = ''; }
   }
 
   async function openDocument(id) {
     try {
       const doc = await dbGet('documents', id);
-      if (!doc) return;
+      if (!doc) return false;
+      // dbGet supplies an independent structured-clone of stored data.
       const task = pdfjsLib.getDocument({ data: new Uint8Array(doc.data) });
-      pdfDoc = await task.promise;
-      currentDoc = doc; currentPage = 1; zoom = 1;
+      const openedPdf = await task.promise;
+      pdfDoc = openedPdf; currentDoc = doc; currentPage = 1; zoom = 1;
       elements.currentDocName.textContent = doc.name;
       elements.pageInfo.textContent = `${pdfDoc.numPages} страниц · PDF хранится на этом устройстве`;
       elements.welcome.classList.add('hidden'); elements.pageWrap.classList.remove('hidden');
-      await renderPage(); await refreshDocuments();
-    } catch (error) { console.error(error); showToast('Не удалось открыть документ.'); }
+      await renderPage();
+      await refreshDocuments();
+      return true;
+    } catch (error) {
+      console.error('PDF open/render failed', error);
+      showToast(`Не удалось отобразить страницу: ${String(error?.message || error).slice(0, 140)}`, 7500);
+      return false;
+    }
   }
 
   async function renderPage() {
@@ -152,11 +188,19 @@
     elements.textLayer.replaceChildren();
     elements.textLayer.style.width = `${viewport.width}px`; elements.textLayer.style.height = `${viewport.height}px`;
     await page.render({ canvasContext: context, viewport, transform: dpr !== 1 ? [dpr,0,0,dpr,0,0] : null }).promise;
-    const textContent = await page.getTextContent();
-    currentPageText = textContent.items.map(item => item.str).filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
-    if (pdfjsLib.renderTextLayer) {
-      const textTask = pdfjsLib.renderTextLayer({ textContent, container: elements.textLayer, viewport, textDivs: [] });
-      if (textTask.promise) await textTask.promise;
+    try {
+      const textContent = await page.getTextContent();
+      currentPageText = textContent.items.map(item => item.str).filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+      if (pdfjsLib.renderTextLayer) {
+        const textTask = pdfjsLib.renderTextLayer({ textContent, container: elements.textLayer, viewport, textDivs: [] });
+        if (textTask.promise) await textTask.promise;
+      }
+    } catch (error) {
+      // A broken text layer must not prevent reading a page with figures/formulas.
+      console.warn('PDF text layer unavailable for this page', error);
+      currentPageText = '';
+      elements.textLayer.replaceChildren();
+      showToast('Страница открыта, но выделение текста на ней недоступно.', 4500);
     }
     elements.pageCounter.textContent = `${currentPage} / ${pdfDoc.numPages}`;
     elements.zoomValue.textContent = `${Math.round(zoom*100)}%`;
