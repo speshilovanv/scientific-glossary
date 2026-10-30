@@ -3,18 +3,181 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#17243a">
-  <meta name="description" content="Офлайн-читалка научных PDF с английско-русским глоссарием">
+  <meta name="theme-color" content="#f7f8f6">
+  <meta name="description" content="Научные PDF, гибридный перевод и англо-русский глоссарий">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css">
-  <title>ScientificGlossary Web</title>
+  <style>
+/* ScientificGlossary Reader 1.2 — quiet, responsive reading workspace.
+   System UI fonts: no tracking, no font network dependency. */
+:root{
+  color-scheme:light;--ink:#172522;--muted:#65736e;--faint:#65776b;--accent:#176e59;
+  --accent-dark:#0f5142;--accent-tint:#ebf5f0;--bg:#f6f7f5;--panel:#ffffff;
+  --line:#e2e8e3;--reader:#edf0ec;--warning:#b35441;
+  --shadow:0 6px 24px rgba(30,47,39,.035);
+  font:400 15px/1.48 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  color:var(--ink);font-synthesis:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);margin:0;min-height:100dvh}
+button,input,select,textarea{font:inherit}
+button,label[for]{-webkit-tap-highlight-color:transparent}
+button{cursor:pointer}
+button:disabled{opacity:.36;cursor:not-allowed}
+:focus-visible{outline:3px solid #3f9879;outline-offset:2px}
+.hidden{display:none!important}
+.topbar{height:70px;padding:0 30px;border-bottom:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}.brand-mark{width:39px;height:39px;flex:none;display:grid;place-items:center;border-radius:12px;background:var(--ink);color:#fff;font-size:21px;font-weight:700;letter-spacing:-.055em}.brand-mark span{color:#85c9ad}.brand strong{display:block;letter-spacing:-.035em;font-size:17px;font-weight:720}.brand small{display:block;color:var(--muted);font-size:12px;line-height:1.4}
+.top-actions{display:flex;align-items:center;gap:15px}.status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);white-space:nowrap}.status i{width:7px;height:7px;background:#48a987;border-radius:50%}.status .version{display:inline-block;margin-left:5px;font-weight:700;color:#2f6859}
+.app-shell{max-width:1800px;margin:auto;padding:20px 24px 24px;display:grid;grid-template-columns:335px minmax(0,1fr);gap:20px;height:calc(100dvh - 70px);min-height:520px}
+.sidebar{display:flex;flex-direction:column;min-height:0;gap:14px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:18px;box-shadow:var(--shadow);min-width:0}
+.upload-panel{flex:0 0 auto}.glossary-panel{min-height:0;flex:1;display:flex;flex-direction:column}
+.section-heading{display:flex;align-items:center;gap:12px;margin-bottom:16px}.section-icon{width:40px;height:40px;border-radius:12px;background:#f0f4ef;color:#376955;display:grid;place-items:center;font-size:22px;flex:none}.section-heading h2{font-size:15px;font-weight:700;letter-spacing:-.025em;margin:0 0 2px}.section-heading p{margin:0;font-size:12px;color:var(--muted)}
+.btn{min-height:48px;padding:9px 15px;border-radius:11px;display:inline-flex;justify-content:center;align-items:center;gap:8px;border:1px solid transparent;font-size:13px;font-weight:650;text-decoration:none;transition:background .16s,border-color .16s,transform .16s}
+.btn:active:not(:disabled){transform:scale(.985)}.btn-primary{color:#fff;background:var(--accent)}.btn-primary:hover{background:var(--accent-dark)}.btn-outline{color:#345047;background:#fff;border-color:var(--line)}.btn-outline:hover{background:#f8faf8;border-color:#c7d8cd}.btn-quiet{background:var(--accent-tint);color:var(--accent)}
+.upload-button{width:100%;margin-bottom:10px}.library-foot{display:flex;margin:0 0 10px}.library-foot .btn{width:100%;font-weight:550}.documents-list{display:flex;flex-direction:column;gap:4px;max-height:216px;overflow:auto;scrollbar-width:thin}
+.document-item{display:flex;align-items:center;gap:10px;padding:11px;border-radius:11px;border:1px solid transparent;min-height:59px;cursor:pointer}.document-item.active{background:var(--accent-tint);border-color:#d1e8db}.document-item:hover{background:#f5f8f5}.doc-mini{width:33px;height:39px;background:#f3f0ea;color:#8d6248;border-radius:7px;display:grid;place-items:center;font-size:10px;font-weight:800;flex:none}.document-item strong{display:block;font-size:12px;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.document-item small{display:block;font-size:11px;color:var(--muted);margin-top:4px}.document-item .remove-doc,.delete-entry{min-width:43px;min-height:43px;border:0;background:transparent;color:#8b9890;font-size:22px;display:grid;place-items:center;margin-left:auto;flex:none;border-radius:10px}.document-item .remove-doc:hover,.delete-entry:hover{background:#fff0ed;color:var(--warning)}
+.empty-small{font-size:13px;color:var(--faint);padding:21px 10px;text-align:center;line-height:1.6}
+.search-input{width:100%;min-height:44px;margin-bottom:9px;background:#fff;border:1px solid var(--line);padding:9px 12px;border-radius:11px;font-size:13px;color:var(--ink);outline:none}.search-input:focus,.field textarea:focus{border-color:#87b79f;box-shadow:0 0 0 3px #2c886018}#glossaryFilter{margin-top:0}.glossary-list{flex:1;min-height:80px;overflow-y:auto;scrollbar-width:thin}.glossary-item{display:flex;align-items:center;min-height:68px;padding:12px 3px;border-bottom:1px solid #eef1ee;cursor:pointer;gap:8px}.glossary-item:hover{background:#f9fbf9}.glossary-item strong{display:block;font-size:14px;color:var(--ink)}.glossary-item p{font-size:12px;color:#41544a;margin:2px 0}.glossary-item small{font-size:10px;color:var(--muted)}
+.export-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:14px}.export-actions .btn{font-size:12px;padding:6px 5px}.backup-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.backup-actions .btn{padding:7px 5px;font-size:11px}
+.dict-import{margin-top:13px;border-top:1px solid var(--line);padding-top:11px}.dict-label{display:inline-block;min-height:34px;color:var(--accent);font-size:12px;font-weight:650;cursor:pointer;padding-top:4px}.dict-import small{display:block;font-size:10px;line-height:1.45;color:var(--muted);margin-top:3px}.sidebar-note{font-size:11px;line-height:1.5;color:#7e8a82;padding:0 7px}
+.reader-area{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--reader);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow)}
+.reader-toolbar{min-height:74px;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;gap:15px;background:#fff;border-bottom:1px solid var(--line)}.doc-title-wrap{display:flex;align-items:center;gap:11px;min-width:0}.pdf-icon{height:39px;width:36px;background:#f3f0ea;color:#8d6248;border-radius:9px;display:grid;place-items:center;font-size:10px;font-weight:800;flex:none}.doc-title-wrap strong{display:block;font-weight:690;letter-spacing:-.015em;font-size:14px;max-width:340px;text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.doc-title-wrap small{font-size:12px;color:var(--muted);display:block;margin-top:3px}
+.reader-controls{display:flex;align-items:center;gap:7px;flex:none}.icon-btn{width:48px;height:48px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font-size:22px;display:grid;place-items:center;line-height:1}.icon-btn:hover:not(:disabled){background:#f1f6f2}.page-counter,.zoom-value{min-width:58px;text-align:center;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}.control-divider{height:27px;width:1px;background:var(--line);margin:0 4px}
+.reader-tools{min-height:54px;padding:7px 20px;display:flex;align-items:center;gap:9px;background:#fff;border-bottom:1px solid var(--line);flex-wrap:wrap}.reader-tools .btn{min-height:44px;font-size:12px}.reader-tools #ocrStatus{font-size:12px;color:var(--muted)}
+.reader-viewport{flex:1;min-height:0;overflow:auto;padding:26px;display:flex;align-items:flex-start;justify-content:center;scrollbar-width:thin}.welcome-card{margin:auto;max-width:555px;background:#fff;border:1px solid var(--line);border-radius:21px;text-align:center;padding:49px 43px;box-shadow:0 12px 42px rgba(25,42,31,.045)}.welcome-illustration{width:54px;height:54px;display:grid;place-items:center;border-radius:16px;background:var(--accent-tint);color:var(--accent);font-size:30px;margin:0 auto 20px}.eyebrow{display:block;color:var(--accent);letter-spacing:.11em;font-size:10px;font-weight:780}.welcome-card h1{font-size:25px;line-height:1.28;letter-spacing:-.035em;margin:10px 0 14px}.welcome-card p{font-size:14px;color:var(--muted);line-height:1.7;margin:0 0 25px}.welcome-hints{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:24px;color:var(--muted);font-size:11px}.welcome-hints span:before{content:'✓';color:var(--accent);margin-right:4px}
+.page-wrap{margin:auto;min-width:min-content}.page-container{position:relative;background:#fff;box-shadow:0 10px 34px #14261c2a;overflow:hidden;touch-action:pan-x pan-y;cursor:crosshair}.page-container canvas{display:block;max-width:none}.textLayer{position:absolute;inset:0;z-index:2;pointer-events:none}.selection-highlights{position:absolute;inset:0;z-index:3;pointer-events:none}.selection-highlights .word-highlight{position:absolute;background:#3a98752e;border:1px solid #257f5ac2;border-radius:2px}
+.reader-footer{min-height:37px;padding:6px 18px;background:#fff;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:9px}.reader-footer span{font-size:11px;color:var(--muted)}.text-btn{border:0;background:none;color:var(--accent);font-size:12px;font-weight:650;white-space:nowrap;min-height:34px}
+.modal{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:18px}.modal-backdrop{position:absolute;inset:0;background:#1428219a;backdrop-filter:blur(3px)}.modal-card{position:relative;border-radius:22px;background:#fff;width:min(100%,540px);max-height:94dvh;overflow-y:auto;padding:27px;box-shadow:0 28px 100px #10271a4a}.modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:19px}.modal-header h2{font-size:29px;line-height:1.25;letter-spacing:-.04em;margin:6px 0}.muted{font-size:12px;color:var(--muted)}.field{margin-bottom:17px}.field label{display:block;margin-bottom:7px;color:#455b50;font-size:13px;font-weight:720}.field textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:14px;line-height:1.6;color:var(--ink);outline:none;resize:vertical}.field-help{font-size:11px;color:var(--muted);line-height:1.45;display:block;margin-top:6px}.source-row{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between;color:var(--muted);font-size:11px;border-bottom:1px solid var(--line);padding:3px 0 16px}.modal-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:18px}
+.toast{position:fixed;bottom:24px;left:50%;z-index:70;max-width:min(90vw,550px);padding:13px 18px;transform:translate(-50%,20px);opacity:0;transition:.18s;pointer-events:none;background:#1d332b;color:#fff;border-radius:12px;box-shadow:0 12px 45px #1a2d2640;font-size:13px}.toast.show{transform:translate(-50%,0);opacity:1}.mobile-nav{display:none}.print-area{display:none}
+@media(max-width:1050px){.app-shell{grid-template-columns:300px minmax(0,1fr);padding:12px;gap:12px}.reader-toolbar{padding:10px 12px;flex-wrap:wrap}.doc-title-wrap strong{max-width:240px}.reader-viewport{padding:14px}.reader-tools{padding:7px 12px}}
+@media(max-width:760px){
+ .topbar{height:59px;padding:0 15px}.brand-mark{width:35px;height:35px;font-size:19px}.brand strong{font-size:15px}.brand small{font-size:11px}.status{font-size:0;gap:0}.status .version{font-size:11px}.status i{width:7px;height:7px;margin-right:5px}.app-shell{height:calc(100dvh - 59px - 67px);min-height:0;display:block;padding:9px}.sidebar{height:100%;display:none;gap:9px}.sidebar-note{display:none}.reader-area{height:100%;border-radius:15px}.panel{border-radius:15px;padding:16px}.upload-panel{overflow:auto;min-height:0}.glossary-panel{min-height:0;flex:1}.documents-list{max-height:40dvh}.glossary-list{min-height:20vh}.section-heading h2{font-size:17px}.section-heading p{font-size:12px}.reader-toolbar{min-height:100px;padding:9px 12px;flex-direction:column;align-items:stretch;justify-content:center;gap:8px}.doc-title-wrap strong{max-width:calc(100vw - 90px);font-size:13px}.doc-title-wrap small{font-size:11px}.pdf-icon{width:27px;height:30px}.reader-controls{justify-content:space-between;gap:5px}.icon-btn{width:48px;height:48px}.control-divider{height:21px}.page-counter,.zoom-value{min-width:44px;font-size:12px}.reader-tools{gap:7px;padding:6px 9px;min-height:48px}.reader-tools .btn{min-height:45px;font-size:12px}.reader-tools #ocrStatus{width:100%;font-size:11px;margin-bottom:3px}.reader-viewport{display:block;text-align:center;padding:10px;min-height:0}.page-wrap{display:inline-block;margin:0 auto}.welcome-card{padding:30px 21px;margin:35px auto}.welcome-card h1{font-size:22px}.welcome-card p{font-size:13px}.welcome-hints{gap:7px;font-size:10px}.reader-footer{min-height:36px;padding:5px 8px}.reader-footer span{font-size:10px}.reader-footer button{font-size:11px}.mobile-nav{position:fixed;z-index:30;bottom:0;left:0;right:0;height:67px;padding:5px 10px max(5px,env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-around;border-top:1px solid var(--line);background:#fff}.mobile-tab{border:0;background:transparent;border-radius:12px;color:var(--muted);min-width:90px;min-height:53px;display:flex;align-items:center;justify-content:center;gap:3px;flex-direction:column;font-size:11px;font-weight:650}.mobile-tab span{font-size:23px;line-height:1}.mobile-tab.active{background:var(--accent-tint);color:var(--accent)}
+ body[data-view="library"] .sidebar,body[data-view="glossary"] .sidebar{display:flex}body[data-view="library"] .reader-area,body[data-view="glossary"] .reader-area{display:none}body[data-view="library"] .glossary-panel{display:none}body[data-view="glossary"] .upload-panel{display:none}body[data-view="read"] .sidebar{display:none}
+ .modal{padding:12px}.modal-card{padding:20px 17px;border-radius:18px}.modal-header h2{font-size:26px}.modal-actions .btn{min-height:46px}.toast{bottom:83px}.backup-actions .btn{font-size:11px}
+}
+@media(min-width:761px){.sidebar,.reader-area{display:flex!important}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+@media print{body{background:#fff}.topbar,.app-shell,.modal,.toast,.mobile-nav{display:none!important}.print-area{display:block!important;padding:20px;color:#111;font:11px/1.45 Arial,sans-serif}.print-area h1{font-size:21px}.print-area .print-meta{font-size:11px;color:#555;margin:8px 0 15px}.print-area table{width:100%;border-collapse:collapse}.print-area th,.print-area td{border:1px solid #78847d;padding:7px;vertical-align:top;text-align:left}.print-area th{background:#eaf0e9}.print-area tr{break-inside:avoid}}
+
+/* 1.2: contextual lookup and legible reading surfaces */
+.phrase-suggestions{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.phrase-suggestions:empty{display:none}
+.phrase-chip{border:1px solid #bcd8cb;background:#f1f8f3;color:#155f4b;border-radius:999px;min-height:38px;padding:8px 12px;font-size:12px;font-weight:650;text-align:left;cursor:pointer}
+.phrase-chip:hover{background:#deefe4}
+.example-quality{font-size:11px;font-weight:500;margin-left:7px;color:var(--muted)}
+#dictionaryStatus.no-translation{color:#965323;font-weight:600}
+.field textarea{font-family:inherit;min-height:82px;line-height:1.55}
+#exampleInput{min-height:118px}
+.reader-area{background:#fff}
+.page-container{cursor:text}
+.word-highlight{outline-offset:1px}
+@media(max-width:760px){.modal-card{max-height:calc(100dvh - 22px)}.modal-actions{position:sticky;bottom:-20px;padding:12px 0 0;background:white;z-index:2}.modal-actions .btn{flex:1;padding:8px}.reader-controls{gap:3px}.reader-viewport{overscroll-behavior:contain}}
+
+@media(max-width:760px){#columnJump{padding:8px 10px;min-width:86px}.reader-tools{justify-content:flex-start}.reader-viewport{scrollbar-width:thin}}
+
+/* Version 1.3: quiet academic reading and explicit source verification */
+.library-progress{margin:3px 0 15px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#fbfcfa}
+.library-progress-head{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:11px}
+.library-progress-head strong{font-size:12px;color:var(--ink);font-weight:650}
+.library-meter{background:#e8ece8;border-radius:99px;height:5px;overflow:hidden;margin-top:11px}
+.library-meter span{display:block;height:100%;background:var(--accent);border-radius:99px;width:0;transition:width .2s}
+.example-preview{background:#f7f9f7;border:1px solid var(--line);border-radius:10px;margin-top:9px;padding:11px 12px;color:#475a52;font-size:12px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.example-preview mark{background:#d7f0e2;border-radius:3px;color:#124f3c;font-weight:650;padding:1px 2px}
+.example-preview.missing-example{color:#9b6d48;background:#fffaf6;border-color:#f0dccc}
+.verified-label{font-size:12px!important;color:#425f51!important;font-weight:550!important;display:flex!important;align-items:center;gap:10px;margin-top:13px!important;cursor:pointer}
+.verified-label input{accent-color:var(--accent);width:19px;height:19px;flex:none}
+.reviewed-badge{display:inline-block;margin-top:4px;font-size:10px;font-weight:650;background:#ecf6ef;color:#257253;border-radius:6px;padding:2px 6px}
+/* Humanist system fonts: avoid external font requests and keep long papers legible. */
+@media(max-width:760px){.library-progress{margin-bottom:10px}.example-preview{font-size:13px}.modal-card{width:min(100%,550px)}}
+
+/* On desktop the sidebar scrolls independently: long 10-PDF libraries must not overlap export controls. */
+@media(min-width:761px){
+ .sidebar{overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;padding-right:2px}
+ .upload-panel{flex:none}
+ .glossary-panel{flex:none;min-height:355px}
+ .glossary-list{flex:none;max-height:260px;min-height:110px}
+}
+
+/* v1.4 · restrained translation controls, responsive to tablet and phone */
+.mode-control{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:650;color:var(--muted);white-space:nowrap}
+.mode-control select{min-height:43px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);max-width:220px;padding:8px 10px;font-size:12px;outline-offset:2px}
+.translation-options{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+.translation-options:empty{display:none}
+.translation-choice{max-width:100%;border-radius:10px;padding:8px 11px;background:#f1f6f2;border:1px solid #d7e6da;display:flex;align-items:center;gap:6px;min-height:40px;color:#244d3c;cursor:pointer;text-align:left;font-size:12px}
+.translation-choice b{font-size:11px;flex-shrink:0;color:#52766a}
+.translation-choice span{overflow-wrap:anywhere}
+.translation-choice:hover{border-color:#8eb5a0;background:#e9f3ec}
+.translation-privacy{display:block;margin-top:10px;color:var(--muted);font-size:11px;line-height:1.5}
+.example-translation-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0 6px}
+.example-translation-head label{font-size:12px;font-weight:650}
+.btn-small{font-size:11px;min-height:38px;padding:7px 10px;white-space:normal}
+#exampleTranslationInput{display:block;width:100%;min-height:68px;resize:vertical;padding:11px;border:1px solid var(--line);border-radius:10px;font:inherit;color:var(--ink);outline-offset:2px}
+#exampleTranslationInput:focus{border-color:var(--accent)}
+#exampleTranslationStatus{display:block;margin-top:5px}
+@media(max-width:760px){.mode-control{width:100%;justify-content:space-between}.mode-control select{max-width:70%;min-width:0}.example-translation-head{align-items:flex-start;flex-direction:column;gap:6px}}
+
+/* v1.5: quality status and a quiet, explicit connectivity check. */
+.quality-info{font-size:11px;line-height:1.5;color:var(--muted);margin:-5px 0 10px;padding:8px 10px;background:#f5f8f5;border:1px solid var(--line);border-radius:9px}
+.provider-status{font-size:11px;color:var(--muted);max-width:310px;line-height:1.45}
+#checkTranslationBtn{font-size:12px;white-space:nowrap}
+@media(max-width:760px){#checkTranslationBtn{flex:1;min-width:120px}.provider-status{flex:1;min-width:130px}}
+/* v1.5 mobile reader: keep the actual PDF above the fold when possible. */
+@media(max-width:760px){
+ .reader-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 7px;padding:7px 10px;align-items:center}
+ .reader-tools .btn{min-height:40px;padding:7px 8px}
+ .reader-tools .mode-control{width:100%;grid-column:1 / -1;justify-content:space-between}
+ .reader-tools .mode-control select{min-height:40px;max-width:min(75%,245px)}
+ #checkTranslationBtn,#selectPhraseBtn{width:100%;min-width:0;font-size:11px}
+ .reader-tools #ocrStatus{grid-column:1 / -1;width:100%;margin:0;line-height:1.35}
+ .reader-tools .provider-status:not(:empty){grid-column:1 / -1;max-width:100%}
+ .reader-viewport{padding-top:6px}
+}
+
+/* Full-width focus mode for academic reading on tablets. */
+.focus-toggle{min-height:38px;font-size:12px;padding:7px 12px;white-space:nowrap}
+@media(min-width:761px){
+ body.focus-reading .app-shell{grid-template-columns:minmax(0,1fr)}
+ body.focus-reading .sidebar{display:none!important}
+ body.focus-reading .reader-area{grid-column:1}
+}
+@media(max-width:760px){.focus-toggle{display:none}}
+
+/* v1.6 — Minimal mobile reader and verified export */
+.entry-source-btn{display:inline-flex;margin-top:8px;min-height:32px;padding:5px 9px;border:1px solid #d8e6dc;border-radius:8px;background:#f5f8f5;color:#1a6d55;font-size:11px;cursor:pointer}
+.entry-source-btn:hover{background:#e9f3eb}
+.export-check{display:flex;align-items:center;gap:8px;padding:10px 1px;font-size:12px;color:var(--muted);cursor:pointer}
+.export-check input{width:18px;height:18px;accent-color:var(--accent)}
+#moreReaderTools{display:none}
+@media(max-width:760px){
+ #moreReaderTools{display:inline-flex;grid-column:2;min-height:40px}
+ .reader-tools #selectPhraseBtn{grid-column:1}
+ .reader-tools #ocrBtn,.reader-tools #columnJump,.reader-tools #checkTranslationBtn,.reader-tools .provider-status{display:none!important}
+ body.reader-more-open .reader-tools #ocrBtn,body.reader-more-open .reader-tools #columnJump,body.reader-more-open .reader-tools #checkTranslationBtn{display:inline-flex!important}
+ body.reader-more-open .reader-tools .provider-status:not(:empty){display:block!important}
+ .entry-source-btn{min-height:40px}
+}
+
+/* v1.8: reading/navigation and glossary review compact controls */
+.page-jump{display:inline-flex;align-items:center;gap:5px;padding:0 4px;min-height:38px;border:1px solid #d6ddd9;border-radius:10px;background:#fff;color:#526457;white-space:nowrap;font-size:12px}
+.page-jump input{border:0;background:transparent;max-width:52px;min-width:36px;width:48px;font:inherit;font-size:14px;color:#172826;text-align:center;outline-offset:2px;appearance:textfield;-moz-appearance:textfield}
+.page-jump input::-webkit-inner-spin-button,.page-jump input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.page-jump input:focus-visible{outline:2px solid #418777;border-radius:4px}
+.page-jump input:disabled{opacity:.4}
+#qualityFilter{margin-top:5px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:440px){.page-jump{padding:0 2px;gap:2px}.page-jump input{width:33px;min-width:27px;max-width:36px;font-size:13px}.page-jump span{font-size:11px}.reader-controls{gap:3px}}
+
+</style>
+  <title>ScientificGlossary Reader · 1.8</title>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><div class="brand-mark">SG</div><div><strong>ScientificGlossary</strong><small>чтение PDF · научный глоссарий</small></div></div>
+    <div class="brand"><div class="brand-mark" aria-hidden="true">S<span>·</span></div><div><strong>ScientificGlossary</strong><small>Научная читалка</small></div></div>
     <div class="top-actions">
-      <span id="offlineBadge" class="status"><i></i> локальное хранение</span>
+      <button id="focusReaderBtn" type="button" class="btn btn-outline focus-toggle" aria-pressed="false" title="Скрыть библиотеку и глоссарий и увеличить PDF">Режим чтения</button>
+      <span id="offlineBadge" class="status"><i></i> данные на устройстве <span class="version">v1.8</span></span>
       <button id="installBtn" class="btn btn-quiet hidden">Установить</button>
     </div>
   </header>
@@ -22,62 +185,79 @@
   <main class="app-shell">
     <aside class="sidebar">
       <section class="panel upload-panel">
-        <div class="section-heading"><span class="section-icon">▤</span><div><h2>Моя библиотека</h2><p>Статьи, учебники и пособия</p></div></div>
-        <label class="btn btn-primary upload-button" for="pdfInput">＋ Добавить PDF</label>
-        <input id="pdfInput" type="file" accept="application/pdf,.pdf" hidden>
+        <div class="section-heading"><span class="section-icon" aria-hidden="true">▤</span><div><h2>Библиотека</h2><p>Статьи, учебники, пособия</p></div></div>
+        <label class="btn btn-primary upload-button" for="pdfInput">＋ Добавить PDF / несколько</label>
+        <input id="pdfInput" type="file" accept="application/pdf,.pdf" multiple hidden>
+        <div class="library-progress" aria-live="polite"><div class="library-progress-head"><strong id="documentGoal">0 из 10 материалов</strong><span id="totalPages">0 страниц</span></div><div class="library-meter" role="progressbar" aria-label="Библиотека из 10 материалов" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0"><span id="libraryMeterFill"></span></div></div>
+        <div class="library-foot"><button id="manualTerm" class="btn btn-outline" title="Также подходит для сканов">+ Добавить термин вручную</button></div>
         <div id="documentsList" class="documents-list"><div class="empty-small">Пока нет документов.<br>Добавьте PDF-файл.</div></div>
       </section>
       <section class="panel glossary-panel">
-        <div class="section-heading"><span class="section-icon">▧</span><div><h2>Глоссарий</h2><p><span id="entryCount">0</span> сохранённых терминов</p></div></div>
+        <div class="section-heading"><span class="section-icon" aria-hidden="true">▧</span><div><h2>Мой глоссарий</h2><p><span id="entryCount">0</span> сохранённых терминов</p></div></div>
+        <div id="glossaryQuality" class="quality-info" role="status" aria-live="polite">Проверено 0/0 · с примером 0/0</div>
         <input id="glossarySearch" class="search-input" type="search" placeholder="Найти термин…">
+        <select id="glossaryFilter" class="search-input" aria-label="Показывать глоссарий"><option value="all">Все документы</option><option value="current">Только открытый PDF</option></select><select id="qualityFilter" class="search-input" aria-label="Проверка записей"><option value="all">Все слова</option><option value="pending">Нужно проверить</option><option value="noexample">Нет примера</option><option value="reviewed">Проверено</option></select>
         <div id="glossaryList" class="glossary-list"><div class="empty-small">Здесь появятся ваши слова.</div></div>
+        <label class="export-check"><input type="checkbox" id="exportVerifiedOnly"> Экспортировать только проверенные термины</label>
         <div class="export-actions">
           <button id="exportCsvBtn" class="btn btn-outline">CSV</button>
-          <button id="exportDocBtn" class="btn btn-outline">Word</button>
+          <button id="exportDocBtn" class="btn btn-outline">DOCX</button>
           <button id="printBtn" class="btn btn-outline">PDF / печать</button>
         </div>
+        <div class="backup-actions"><button id="backupBtn" class="btn btn-outline" title="Резервная копия для другого устройства">Резервная копия</button><label class="btn btn-outline" for="backupInput">Восстановить</label><input id="backupInput" type="file" accept=".json,application/json" hidden></div><div class="dict-import"><label class="dict-label" for="dictionaryInput">+ Добавить офлайн-словарь TSV</label><input id="dictionaryInput" type="file" accept=".tsv,.txt,text/plain" hidden><small id="dictInfo">Значения хранятся локально. Формат: английское слово ↹ перевод.</small></div>
       </section>
-      <div class="sidebar-note"><strong>Работа без интернета</strong><br>Сохранённые документы и глоссарий хранятся в этом браузере на устройстве.</div>
+      <div class="sidebar-note">Ваши PDF и записи хранятся в этом браузере. Не очищайте данные сайта без резервной копии.</div>
     </aside>
 
     <section class="reader-area">
       <div class="reader-toolbar">
         <div class="doc-title-wrap"><span class="pdf-icon">PDF</span><div><strong id="currentDocName">Документ не открыт</strong><small id="pageInfo">Добавьте статью или учебник в формате PDF</small></div></div>
         <div class="reader-controls">
-          <button id="prevPage" class="icon-btn" title="Предыдущая страница" disabled>‹</button>
-          <span id="pageCounter" class="page-counter">— / —</span>
-          <button id="nextPage" class="icon-btn" title="Следующая страница" disabled>›</button>
+          <button id="prevPage" class="icon-btn" title="Предыдущая страница" aria-label="Предыдущая страница" disabled>‹</button>
+          <label class="page-jump" title="Перейти к странице"><input id="pageJump" type="number" min="1" step="1" inputmode="numeric" aria-label="Перейти к странице PDF" placeholder="1" disabled><span id="pageCountLabel">/ —</span></label><span id="pageCounter" class="page-counter sr-only" aria-label="Текущая страница">— / —</span>
+          <button id="nextPage" class="icon-btn" title="Следующая страница" aria-label="Следующая страница" disabled>›</button>
           <span class="control-divider"></span>
-          <button id="zoomOut" class="icon-btn" title="Уменьшить">−</button>
+          <button id="zoomOut" class="icon-btn" title="Уменьшить" aria-label="Уменьшить масштаб">−</button>
           <span id="zoomValue" class="zoom-value">100%</span>
-          <button id="zoomIn" class="icon-btn" title="Увеличить">＋</button>
+          <button id="zoomIn" class="icon-btn" title="Увеличить" aria-label="Увеличить масштаб">+</button>
         </div>
       </div>
+      <div class="reader-tools"><button id="ocrBtn" class="btn btn-outline" title="Распознать скан. Первый запуск требует интернет.">OCR скана</button><button id="columnJump" class="btn btn-outline hidden" title="Перейти к другой половине страницы PDF">⇄ Колонка</button><label class="mode-control" for="translationMode"><span>Перевод</span><select id="translationMode" aria-label="Режим перевода"><option value="auto">Авто · онлайн / офлайн</option><option value="offline">Только офлайн</option></select></label><button id="checkTranslationBtn" class="btn btn-outline" type="button" title="Проверить MyMemory без отправки PDF">Проверить перевод</button><span id="providerStatus" class="provider-status" role="status" aria-live="polite"></span><button id="selectPhraseBtn" class="btn btn-outline" title="Отметьте первое и последнее слово фразы" aria-pressed="false">Выделить фразу</button><button id="moreReaderTools" type="button" class="btn btn-outline" aria-expanded="false">Ещё инструменты</button><span id="ocrStatus" aria-live="polite">Нажмите на слово в PDF</span></div>
       <div id="readerViewport" class="reader-viewport">
         <div id="welcome" class="welcome-card">
-          <div class="welcome-illustration">📖</div>
-          <h1>Читайте и собирайте свой словарь</h1>
+          <div class="welcome-illustration" aria-hidden="true">▤</div>
+          <span class="eyebrow">ВАША РАБОЧАЯ БИБЛИОТЕКА</span><h1>Читайте. Переводите. Сохраняйте.</h1>
           <p>Загрузите англоязычную научную статью или учебник в PDF. Страница останется в оригинальном виде — вместе с графиками, схемами, формулами и таблицами.</p>
           <label class="btn btn-primary" for="pdfInput">Выбрать PDF-файл</label>
-          <div class="welcome-hints"><span>✓ Локальный словарь</span><span>✓ Глоссарий по статьям</span><span>✓ Экспорт для печати</span></div>
+          <div class="welcome-hints"><span>Локальный словарь</span><span>Примеры из текста</span><span>Экспорт в Word</span></div>
         </div>
         <div id="pageWrap" class="page-wrap hidden">
           <div id="pageContainer" class="page-container">
             <canvas id="pdfCanvas"></canvas>
-            <div id="textLayer" class="textLayer"></div>
+            <div id="textLayer" class="textLayer"></div><div id="selectionHighlights" class="selection-highlights" aria-hidden="true"></div>
           </div>
         </div>
       </div>
-      <div class="reader-footer"><span id="readerHint">Подсказка: нажмите на английское слово в тексте, чтобы открыть карточку перевода.</span><button id="clearSelection" class="text-btn">Снять выделение</button></div>
+      <div class="reader-footer"><span id="readerHint">Нажмите на слово · «Выделить фразу» для терминов из нескольких слов · OCR для сканов.</span><button id="clearSelection" class="text-btn">Снять выделение</button></div>
     </section>
   </main>
+
+  <nav class="mobile-nav" aria-label="Разделы приложения">
+    <button id="mobileRead" type="button" class="mobile-tab active" data-view-target="read"><span aria-hidden="true">▤</span> Читать</button>
+    <button id="mobileLibrary" type="button" class="mobile-tab" data-view-target="library"><span aria-hidden="true">▦</span> Библиотека</button>
+    <button id="mobileGlossary" type="button" class="mobile-tab" data-view-target="glossary"><span aria-hidden="true">▧</span> Слова</button>
+  </nav>
 
   <div id="termModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTerm">
     <div class="modal-backdrop" data-close="1"></div>
     <div class="modal-card">
       <div class="modal-header"><div><span class="eyebrow">КАРТОЧКА ТЕРМИНА</span><h2 id="modalTerm">term</h2><span id="modalType" class="muted">Английский термин</span></div><button id="closeModal" class="icon-btn" aria-label="Закрыть">×</button></div>
-      <div class="field"><label for="translationInput">Варианты перевода</label><textarea id="translationInput" rows="2" placeholder="Введите перевод. Несколько значений разделяйте точкой с запятой."></textarea><small id="dictionaryStatus" class="field-help">Значение из локального словаря можно исправить.</small></div>
-      <div class="field"><label for="exampleInput">Пример употребления из статьи</label><textarea id="exampleInput" rows="3" placeholder="Предложение из текущей страницы"></textarea></div>
+      <div class="field"><div id="phraseSuggestions" class="phrase-suggestions" aria-label="Связанные научные выражения"></div><label for="translationInput">Варианты перевода</label><textarea id="translationInput" rows="2" spellcheck="false" placeholder="Введите перевод. Несколько значений разделяйте точкой с запятой."></textarea><small id="dictionaryStatus" class="field-help" aria-live="polite">Офлайн-словарь и ранее сохранённые переводы; значение можно изменить.</small>
+        <div id="translationOptions" class="translation-options" aria-live="polite"></div>
+        <small class="translation-privacy">В режиме «Авто» сервис MyMemory получает выбранное слово/выражение. Локальный научный перевод сохраняет приоритет; онлайн-перевод предлагается как вариант. Предложение передаётся только по отдельной кнопке. Весь PDF не отправляется.</small></div>
+      <div class="field"><label for="exampleInput">Пример употребления <span id="exampleQuality" class="example-quality"></span></label><textarea id="exampleInput" rows="3" placeholder="Предложение из текущей страницы"></textarea><div id="examplePreview" class="example-preview" aria-live="polite"></div>
+        <div class="example-translation-head"><label for="exampleTranslationInput">Перевод примера (необязательно)</label><button type="button" id="translateExampleBtn" class="btn btn-outline btn-small">Перевести пример онлайн</button></div>
+        <textarea id="exampleTranslationInput" rows="2" placeholder="Русский перевод исходного предложения, при необходимости"></textarea><small id="exampleTranslationStatus" class="field-help" aria-live="polite">Английский пример всегда остаётся из статьи.</small><label class="verified-label" for="reviewedCheckbox"><input id="reviewedCheckbox" type="checkbox"> Я проверил перевод и пример по статье</label></div>
       <div class="source-row"><span id="sourceInfo">Источник: —</span><span id="pageSource">Страница —</span></div>
       <div class="modal-actions"><button id="cancelTerm" class="btn btn-outline">Отмена</button><button id="saveTerm" class="btn btn-primary">＋ Сохранить в глоссарий</button></div>
     </div>
@@ -86,6 +266,2586 @@
   <div id="toast" class="toast" role="status"></div>
   <section id="printArea" class="print-area"></section>
 
-  <script src="app.js"></script>
+  <script>
+/* Offline DOCX export: Office Open XML ZIP, no third-party network dependencies.
+   The package uses ZIP's STORE method. Public API: window.SGDocx.build(entries). */
+(() => {
+  'use strict';
+  const enc = new TextEncoder();
+  const xml = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
+  const p = (value, bold=false) => `<w:p><w:pPr><w:spacing w:after="80"/></w:pPr><w:r>${bold?'<w:rPr><w:b/></w:rPr>':''}<w:t xml:space="preserve">${xml(value).replace(/\n/g,'</w:t><w:br/><w:t xml:space="preserve">')}</w:t></w:r></w:p>`;
+  const cell = (value, width, bold=false) => `<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="dxa"/><w:tcBorders><w:bottom w:val="single" w:sz="3"/><w:right w:val="single" w:sz="3"/></w:tcBorders></w:tcPr>${p(value,bold)}</w:tc>`;
+  const row = (cols, header=false) => `<w:tr><w:trPr>${header?'<w:tblHeader w:val="true"/>':''}<w:cantSplit/></w:trPr>${cols.map((v,i)=>cell(v,[500,2100,2400,5800,2600][i],header)).join('')}</w:tr>`;
+  function crc32(bytes) {
+    let crc = -1;
+    for (const b of bytes) {
+      crc ^= b;
+      for (let j=0;j<8;j++) crc = (crc >>> 1) ^ (0xEDB88320 & -(crc & 1));
+    }
+    return (crc ^ -1) >>> 0;
+  }
+  const u16 = (n) => [n & 255, (n >>> 8) & 255];
+  const u32 = (n) => [n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255];
+  function packageZip(files) {
+    const locals=[], central=[];
+    let offset=0;
+    for (const [name, content] of Object.entries(files)) {
+      const path=enc.encode(name), data=enc.encode(content), crc=crc32(data);
+      const loc=new Uint8Array([0x50,0x4b,3,4,20,0,0,8,0,0,0,0,0,0,...u32(crc),...u32(data.length),...u32(data.length),...u16(path.length),0,0]);
+      locals.push(loc,path,data);
+      central.push(new Uint8Array([0x50,0x4b,1,2,20,0,20,0,0,8,0,0,0,0,0,0,...u32(crc),...u32(data.length),...u32(data.length),...u16(path.length),0,0,0,0,0,0,0,0,0,0,0,0,...u32(offset)]),path);
+      offset += loc.length + path.length + data.length;
+    }
+    const centerLength=central.reduce((s,v)=>s+v.length,0);
+    const entries=Object.keys(files).length;
+    const end=new Uint8Array([0x50,0x4b,5,6,0,0,0,0,...u16(entries),...u16(entries),...u32(centerLength),...u32(offset),0,0]);
+    return new Blob([...locals,...central,end], {type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+  }
+  function build(entries, title='Англо-русский глоссарий') {
+    const lines=[row(['№','English term','Перевод','Example of usage','Источник / страница'],true)];
+    entries.forEach((e,i)=>lines.push(row([i+1,e.term,e.translation,e.example+(e.exampleTranslation?'\nПеревод примера: '+e.exampleTranslation:''), `${e.sourceName||''} · стр. ${e.page||'—'}`])));
+    const document = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${p(title,true)}${p('Сформировано '+new Date().toLocaleDateString('ru-RU')+' · терминов: '+entries.length)}<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/><w:tblBorders><w:top w:val="single" w:sz="5"/><w:left w:val="single" w:sz="5"/><w:bottom w:val="single" w:sz="5"/><w:right w:val="single" w:sz="5"/><w:insideH w:val="single" w:sz="3"/><w:insideV w:val="single" w:sz="3"/></w:tblBorders></w:tblPr><w:tblGrid>${[500,2100,2400,5800,2600].map(w=>`<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${lines.join('')}</w:tbl><w:sectPr><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/><w:pgMar w:top="850" w:right="850" w:bottom="850" w:left="850"/></w:sectPr></w:body></w:document>`;
+    const types=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>`;
+    const rels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
+    const docRels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`;
+    const styles=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="19"/></w:rPr></w:rPrDefault></w:docDefaults></w:styles>`;
+    return packageZip({'[Content_Types].xml':types,'_rels/.rels':rels,'word/document.xml':document,'word/_rels/document.xml.rels':docRels,'word/styles.xml':styles});
+  }
+  window.SGDocx={build};
+})();
+
+</script>
+  <script id="embeddedDictionary" type="text/plain">
+# Offline English→Russian scientific / petroleum / process engineering lexicon.
+# Extend this file with local vocabulary. Tab separator: English term<TAB>translation(s).
+# This is a curated starter vocabulary, NOT a general machine translator.
+electrostatic coalescer	электростатический коалесцер; электродегидратор
+coalescer	коалесцер; аппарат для укрупнения капель
+coalescence	коалесценция; слияние капель
+coalesce	сливаться; укрупняться (о каплях)
+water-in-oil emulsion	эмульсия типа «вода в нефти»; обратная эмульсия
+water-oil emulsion	водонефтяная эмульсия
+emulsion	эмульсия
+emulsions	эмульсии
+oil-in-water emulsion	эмульсия типа «нефть в воде»
+crude oil	сырая нефть
+oil	нефть; масло
+water	вода
+hydrocarbon	углеводород
+petroleum	нефть; нефтяной
+upstream operations	операции добычи и подготовки нефти
+upstream	добывающий сектор; операции на промысле
+midstream	транспортировка и хранение углеводородов
+downstream	переработка; нефтеперерабатывающий сектор
+oil field	нефтяное месторождение
+oil well	нефтяная скважина
+well	скважина
+oil deposit	нефтяная залежь; нефтяное месторождение
+reservoir	пласт-коллектор; резервуар
+reservoir pressure	пластовое давление
+formation	геологическая формация; пласт
+formation water	пластовая вода
+produced water	попутно добываемая вода
+water cut	обводнённость продукции
+water content	содержание воды
+water removal	удаление воды; обезвоживание
+water separation	отделение воды
+de-watering	обезвоживание
+dehydration	обезвоживание
+dehydrator	дегидратор; обезвоживатель
+electrodehydrator	электродегидратор
+desalter	электрообессоливатель; аппарат обессоливания
+desalting	обессоливание
+salt	соль
+salinity	солёность; минерализация
+salt removal	удаление солей
+separation	разделение; сепарация
+phase separation	разделение фаз
+separator	сепаратор
+separation efficiency	эффективность разделения
+overall efficiency	общая эффективность
+efficiency	эффективность
+performance	эффективность работы; рабочие показатели
+yield	выход; производительность; результативность
+volumetric flow	объёмный расход
+volumetric flow rate	объёмный расход
+flow rate	расход; скорость потока
+inlet flow rate	входной расход
+outlet flow rate	выходной расход
+feedstock	сырьё; исходный поток
+feed	подаваемая смесь; сырьё
+inlet	вход; входной
+outlet	выход; выходной
+flow	поток; расход
+fluid	флюид; текучая среда
+bulk	основная масса жидкости; объём среды
+chamber	камера; отсек
+weir	переливная перегородка
+demister	каплеуловитель
+water collector	сборник воды
+collector	сборник; коллектор
+electrode	электрод
+electrical field	электрическое поле
+electric field	электрическое поле
+electrostatic field	электростатическое поле
+electric current	электрический ток
+alternate current	переменный ток
+alternating current	переменный ток
+direct current	постоянный ток
+continuous current	постоянный ток
+voltage	напряжение (электрическое)
+electrical field threshold	пороговая напряжённость электрического поля
+threshold	пороговое значение
+intensity	напряжённость; интенсивность
+permittivity	диэлектрическая проницаемость
+relative permittivity	относительная диэлектрическая проницаемость
+polarization	поляризация
+polarization effect	эффект поляризации
+interfacial tension	межфазное натяжение
+surface tension	поверхностное натяжение
+interfacial	межфазный
+interface	граница раздела фаз
+droplet	капля
+droplets	капли
+water droplet	капля воды
+droplet diameter	диаметр капли
+droplet radius	радиус капли
+droplet deformation	деформация капли
+droplet distribution	распределение капель
+size distribution	распределение по размерам
+diameter distribution	распределение по диаметрам
+dispersed phase	дисперсная фаза
+continuous phase	непрерывная фаза; дисперсионная среда
+biphasic	двухфазный
+immiscible	несмешивающийся
+disperse	диспергировать; распределять
+solids	твёрдые частицы
+solid removal	удаление твёрдых частиц
+sedimentation	осаждение
+sediment	осадок
+settling	отстаивание; осаждение
+gravity	сила тяжести; гравитация
+gravity separation	гравитационное разделение
+buoyancy	выталкивающая сила; плавучесть
+Archimedes contribution	сила Архимеда; вклад выталкивающей силы
+falling velocity	скорость оседания
+rising velocity	скорость всплывания
+residence time	время пребывания; время выдержки
+operational time	время работы; продолжительность операции
+operating conditions	условия эксплуатации
+operational parameters	рабочие параметры
+laminar flow	ламинарное течение
+laminar	ламинарный
+viscous flow	вязкое течение
+viscous	вязкий
+viscosity	вязкость
+dynamic viscosity	динамическая вязкость
+oil viscosity	вязкость нефти
+density	плотность
+density difference	разность плотностей
+concentration	концентрация
+water concentration	концентрация воды
+volumetric concentration	объёмная концентрация
+volume fraction	объёмная доля
+volumetric fraction	объёмная доля
+cross-sectional area	площадь поперечного сечения
+surface area	площадь поверхности
+pressure	давление
+friction	трение
+friction factor	коэффициент трения
+frictional factor	коэффициент сопротивления трению
+force	сила
+electrostatic force	электростатическая сила
+attraction	притяжение
+attraction force	сила притяжения
+collision	столкновение; соударение
+collision frequency	частота столкновений
+collision efficiency	эффективность столкновений
+critical diameter	критический диаметр
+average diameter	средний диаметр
+nominal diameter	номинальный диаметр
+mass balance	материальный баланс; баланс массы
+momentum balance	баланс количества движения
+number balance	баланс числа частиц
+conservation principle	закон сохранения
+mass conservation	сохранение массы
+steady state	установившийся режим; стационарное состояние
+steady-state	стационарный
+stability	устойчивость; стабильность
+emulsion stability	устойчивость эмульсии
+stable	устойчивый
+unstable	неустойчивый
+thermodynamic stability	термодинамическая устойчивость
+emulsifier	эмульгатор
+de-emulsifier	деэмульгатор
+demulsifier	деэмульгатор
+additive	добавка; присадка
+chemical additive	химическая добавка
+entrainer	вспомогательный реагент; агент разделения
+asphaltene	асфальтен
+resin	смола
+model	модель
+modeling	моделирование
+mathematical model	математическая модель
+mathematical modeling	математическое моделирование
+rigorous modeling	строгое математическое моделирование
+first-principles model	модель на основе фундаментальных физических законов
+first-principle	основанный на фундаментальных принципах
+fundamental law	фундаментальный закон
+boundary condition	граничное условие
+initial condition	начальное условие
+boundary value problem	краевая задача
+differential equation	дифференциальное уравнение
+differential system	система дифференциальных уравнений
+numerical solution	численное решение
+numerical integration	численное интегрирование
+integration step	шаг интегрирования
+iterative procedure	итерационная процедура
+iteration	итерация
+convergence	сходимость
+sensitivity analysis	анализ чувствительности
+sensitivity	чувствительность
+simulation	моделирование; вычислительный эксперимент
+simulation results	результаты моделирования
+calculation	расчёт; вычисление
+compute	вычислять; рассчитывать
+computational	вычислительный
+prediction	прогнозирование
+predictive control	прогнозирующее управление
+optimization	оптимизация
+monitoring	мониторинг; контроль
+characterization	определение характеристик
+assumption	допущение; предположение
+approximation	приближение; аппроксимация
+discretization	дискретизация
+probability distribution	распределение вероятностей
+lognormal distribution	логнормальное распределение
+heterogeneous	неоднородный; гетерогенный
+homogeneous	однородный; гомогенный
+experiment	эксперимент
+experimental	экспериментальный
+experimental data	экспериментальные данные
+sample	образец
+measurement	измерение
+research	исследование
+literature review	обзор литературы
+state of the art	современное состояние исследований; уровень техники
+parameter	параметр
+property	свойство; характеристика
+properties	свойства
+relationship	соотношение; взаимосвязь
+correlation	корреляция; зависимость
+coefficient	коэффициент
+function	функция
+variable	переменная
+value	значение
+result	результат
+increase	увеличиваться; увеличение
+decrease	уменьшаться; снижение
+influence	влияние; влиять
+induce	вызывать; индуцировать
+occur	происходить
+indicate	указывать; свидетельствовать
+demonstrate	демонстрировать; показывать
+estimate	оценивать
+obtain	получать
+require	требовать
+consider	рассматривать; учитывать
+provide	предоставлять; обеспечивать
+compare	сравнивать
+vary	изменяться
+variation	изменение; вариация
+relevant	существенный; релевантный
+appropriate	соответствующий; подходящий
+sufficient	достаточный
+negligible	пренебрежимо малый
+significant	значительный; существенный
+roughly	приблизительно
+respectively	соответственно
+moreover	более того; кроме того
+nevertheless	тем не менее
+therefore	следовательно; поэтому
+whereas	тогда как; в то время как
+thus	таким образом
+according to	согласно; в соответствии с
+in order to	для того чтобы
+in terms of	с точки зрения; в терминах
+with respect to	по отношению к; относительно
+as a result	в результате
+in addition	кроме того; дополнительно
+on the other hand	с другой стороны
+# additional drilling/geomechanics glossary for 2.8.4
+permeability	проницаемость
+porosity	пористость
+fracture	трещина; разрушение
+fractured rock	трещиноватая горная порода
+rock mass	массив горных пород
+rock	горная порода
+formation pressure	пластовое давление
+formation damage	повреждение призабойной зоны
+reservoir rock	порода-коллектор
+shear strength	прочность на сдвиг
+compressive strength	прочность при сжатии
+stress	механическое напряжение
+strain	деформация
+subsidence	оседание; проседание земной поверхности
+fracture pressure	давление гидроразрыва
+wellbore	ствол скважины
+drilling	бурение
+drilling mud	буровой раствор
+well logging	каротаж; геофизические исследования скважины
+hydraulic fracturing	гидравлический разрыв пласта
+production rate	дебит
+recovery factor	коэффициент извлечения
+fluid saturation	насыщенность флюидом
+reservoir simulation	моделирование разработки месторождения
+
+a;an	неопределённый артикль
+about	о; приблизительно
+above	выше; над
+according	согласно; в соответствии с
+achieve	достигать
+achieved	достигнутый; полученный
+account	учёт; учитывать
+accuracy	точность
+across	через; поперёк
+acting	действующий
+activity	деятельность; активность
+actual	фактический; действительный
+additional	дополнительный
+adopt	применять; принимать
+adopted	принятый; использованный
+affected	подверженный воздействию
+against	против; по отношению к
+all	все; весь
+allow	позволять
+allowed	допустимый; разрешённый
+almost	почти
+already	уже
+also	также
+although	хотя
+always	всегда
+among	среди
+amount	количество; величина
+analyze	анализировать
+and	и
+another	другой; ещё один
+any	любой; какой-либо
+apart	отдельно; в стороне
+application	применение; приложение
+applications	применения
+applied	применённый; приложенный
+approximately	приблизительно
+are	являются; находятся
+area	область; район; площадь
+areas	области; районы; площади
+arise	возникать
+around	около; вокруг
+article	статья
+articles	статьи
+as	как; в качестве; поскольку
+assess	оценивать
+assessment	оценка
+assume	предполагать; принимать допущение
+assumed	принятый; предполагаемый
+at	в; при; на
+authors	авторы
+average	средний; среднее значение
+available	доступный; имеющийся
+based	основанный
+basic	основной; базовый
+be	быть; являться
+because	потому что; поскольку
+become	становиться
+been	был; были
+before	до; перед
+behavior	поведение; характеристики работы
+below	ниже; под
+between	между
+both	оба; и тот и другой
+bound	граница; ограниченный
+by	посредством; на; по
+calculate	рассчитывать
+calculated	рассчитанный
+can	может; способны
+case	случай; вариант
+cases	случаи; варианты
+cause	вызывать; причина
+caused	вызванный
+changes	изменения
+characterize	характеризовать
+chemical	химический; химическое вещество
+chemicals	химические вещества
+class	класс; категория
+classes	классы; категории
+clear	ясный; очевидный
+close	близкий; закрывать
+coefficients	коэффициенты
+combined	совмещённый
+common	общий; распространённый
+comparison	сравнение
+complete	полный; завершать
+complex	сложный; комплекс
+component	компонент; составляющая
+composition	состав; композиция
+computer	компьютер
+concerning	касающийся; относительно
+condition	условие
+conditions	условия
+considered	рассмотренный; учитываемый
+considering	рассматривая; с учётом
+consist	состоять
+constant	постоянный; константа
+contain	содержать
+contains	содержит
+context	контекст
+continuous	непрерывный; сплошной
+contribution	вклад; составляющая
+contributions	вклады; составляющие
+control	управление; контроль
+convection	конвекция
+correspond	соответствовать
+corresponding	соответствующий
+could	мог бы; могли бы
+current	ток; текущий
+cut	разрезать; уменьшать
+data	данные
+date	дата
+day	день
+decade	десятилетие
+decades	десятилетия
+decreased	уменьшившийся
+decreases	уменьшается
+dedicated	специально предназначенный
+define	определять
+defined	определённый
+densities	плотности
+depend	зависеть
+depends	зависит
+describe	описывать
+described	описанный; изложенный
+description	описание
+design	проектирование; конструкция
+despite	несмотря на
+determine	определять
+determined	определённый
+develop	разрабатывать
+development	разработка; развитие
+device	устройство; приём
+DIAM	диаметр (сокращение)
+diameter	диаметр
+diameters	диаметры
+difference	разность; различие
+different	различный; разный
+difficult	трудный; сложный
+dimension	размер; измерение
+dimensional	размерный
+dimensions	размеры
+direction	направление
+directly	непосредственно
+distance	расстояние
+distant	удалённый
+distribution	распределение
+distributions	распределения
+divide	разделять
+divided	разделённый
+does	делает; (вспомогательный глагол)
+down	вниз; по направлению вниз
+due	обусловленный; вследствие
+during	в течение
+dynamic	динамический
+each	каждый
+effect	эффект; воздействие; влияние
+effective	эффективный; действенный
+effectiveness	эффективность воздействия
+effects	эффекты; воздействия
+effort	усилие
+either	любой из двух; либо
+electrical	электрический
+electrostatic	электростатический
+element	элемент
+emphasize	подчёркивать
+end	конец; окончание
+energy	энергия
+engineering	инженерное дело; технический
+ensure	обеспечивать
+equals	равен
+equation	уравнение
+equations	уравнения
+estimated	оценённый; расчётный
+evaluate	оценивать; вычислять
+evaluated	оценённый; вычисленный
+evaluation	оценка; расчёт
+even	даже
+evolution	развитие; изменение во времени
+example	пример
+exceed	превышать
+experiments	эксперименты
+explain	объяснять
+explicit	явный; прямой
+expression	выражение; формула
+expressions	выражения
+extra	дополнительный
+extracted	извлечённый; добытый
+extraction	добыча; извлечение
+factor	фактор; коэффициент
+factors	факторы; коэффициенты
+falling	падение; опускание
+fast	быстрый
+favor	способствовать; благоприятствовать
+favored	способствующий; поддерживаемый
+features	особенности; функции
+few	несколько; мало
+field	поле; область
+fields	поля
+figure	рисунок; иллюстрация; число
+fig	рисунок (сокращение)
+figures	рисунки; данные
+finally	наконец; в заключение
+find	находить
+first	первый
+flexible	гибкий
+flows	потоки; расходы
+follow	следовать
+following	следующий; нижеследующий
+follows	следует
+for	для; в течение; по
+forces	силы
+form	форма; образовывать
+formed	образованный
+found	найденный; обнаруженный
+fraction	доля
+fractions	доли
+free	свободный; несвязанный
+frequency	частота
+from	из; от
+full	полный
+functions	функции
+further	дальнейший; дополнительно
+gas	газ
+generate	создавать; образовывать
+generated	образованный; созданный
+generally	в целом; обычно
+given	данный; заданный
+goes	идёт; проходит
+good	хороший
+governing	определяющий; управляющий
+gradual	постепенный
+graph	график
+great	большой; значительный
+greater	больший
+half	половина
+has	имеет; (вспомогательный глагол)
+have	иметь; (вспомогательный глагол)
+having	имеющий
+height	высота
+hence	следовательно
+here	здесь
+higher	более высокий; выше
+highly	в высокой степени
+however	однако
+hypothesis	гипотеза
+if	если
+illustrate	иллюстрировать; показывать
+illustrated	показанный
+important	важный
+improve	улучшать
+improved	улучшенный
+in	в; внутри; при
+include	включать
+included	включённый
+including	включая
+increased	увеличенный
+increases	увеличивается
+increasing	растущий; увеличивающийся
+indicated	указанный
+industrial	промышленный; производственный
+industry	промышленность; отрасль
+influenced	подверженный влиянию
+initial	исходный; начальный
+inside	внутри
+instead	вместо
+integrate	интегрировать
+integrated	интегрированный
+integration	интегрирование
+intense	интенсивный; сильный
+interest	интерес; значимость
+into	в; внутрь
+introduce	вводить; представлять
+introduced	введённый
+investigate	исследовать
+investigated	исследованный
+investigation	исследование
+involve	включать; вовлекать
+involved	задействованный
+is	есть; является
+it	это; он; она
+its	его; её; свой
+item	элемент; пункт
+iterative	итерационный
+just	только; именно
+key	ключевой
+known	известный
+large	большой
+larger	больший
+largest	наибольший; самый крупный
+last	последний
+later	позже
+law	закон
+laws	законы
+layer	слой
+leading	ведущий; приводящий к
+least	наименьший; по крайней мере
+less	менее; меньше
+level	уровень
+levels	уровни
+like	подобный; как
+limit	предел; ограничение
+limited	ограниченный
+limits	пределы
+line	линия; строка
+lines	линии; строки
+liquid	жидкость; жидкий
+literature	научная литература; публикации
+located	расположенный
+location	местоположение
+long	долгий; длинный
+lower	более низкий; ниже
+low	низкий
+main	основной
+make	делать; создавать
+making	образование; выполнение
+many	многие; много
+mass	масса
+match	соответствовать; совпадать
+material	материал; вещество
+mathematical	математический
+maximum	максимум; максимальный
+may	может; возможно
+mean	означать; средний
+means	означает; средства
+measure	измерять; мера
+measured	измеренный
+method	метод
+methods	методы
+might	мог бы; возможно
+minimum	минимум; минимальный
+models	модели
+more	больше; более
+most	большинство; наиболее
+motion	движение
+move	двигаться
+moved	перемещённый
+moving	движущийся
+much	много; значительно
+multiple	множественный; многократный
+must	должен; необходимо
+nature	природа; характер
+necessary	необходимый
+need	потребность; необходимо
+needed	необходимый
+negative	отрицательный
+new	новый
+next	следующий
+no	нет; отсутствие
+nonlinear	нелинейный
+normal	нормальный; обычный
+not	не
+note	отмечать; примечание
+noted	отмеченный
+number	число; количество
+numerical	численный; числовой
+obtained	полученный
+occurred	произошёл
+occurring	возникающий
+of	из; принадлежность; родительный падеж
+often	часто
+oilfield	нефтяное месторождение
+on	на; по
+once	как только; однажды
+one	один
+only	только
+operation	операция; эксплуатация
+operations	операции; процессы
+operational	рабочий; эксплуатационный
+or	или
+order	порядок; с целью
+origin	происхождение
+original	исходный; первоначальный
+other	другой; иной
+otherwise	иначе
+our	наш
+out	наружу; вне
+overall	общий; суммарный
+over	над; свыше
+parameters	параметры
+part	часть
+parts	части
+particularly	особенно; в частности
+pass	проходить; пропускать
+passed	прошедший
+performed	выполненный; проведённый
+phase	фаза
+phases	фазы
+phenomena	явления; процессы
+phenomenon	явление
+physical	физический
+picture	изображение; картина
+place	место; помещать
+placed	расположенный; размещённый
+plant	установка; предприятие
+plants	установки; предприятия
+point	точка; положение
+points	точки
+portion	часть; доля
+possible	возможный; возможно
+power	мощность; энергия
+practice	практика
+present	настоящий; представлять; имеющийся
+presence	наличие; присутствие
+previous	предыдущий
+previously	ранее
+principal	основной; главный
+principle	принцип
+principles	принципы
+probability	вероятность
+problem	задача; проблема
+problems	задачи; проблемы
+procedure	процедура; методика
+process	процесс; обрабатывать
+processes	процессы
+produce	производить; образовывать
+produced	произведённый; образованный
+proposed	предложенный
+provided	представленный; обеспеченный
+purpose	цель; назначение
+purposes	цели; назначения
+quality	качество
+quantity	количество; величина
+range	диапазон; интервал
+rate	скорость; расход
+ratio	отношение; коэффициент
+reach	достигать
+reached	достигнутый
+real	реальный; фактический
+reasonable	обоснованный; разумный
+recent	недавний
+recently	недавно
+reduce	уменьшать
+reduced	сниженный; уменьшенный
+reduction	снижение; уменьшение
+reference	ссылка; исходный
+refine	уточнять; очищать
+refined	очищенный; уточнённый
+regarding	относительно; в отношении
+regular	регулярный; правильный
+related	связанный
+relation	отношение; связь
+relative	относительный
+remain	оставаться
+remaining	оставшийся; остаточный
+remove	удалять
+removed	удалённый
+repeat	повторять
+reported	представленный; сообщённый
+represent	представлять; обозначать
+represents	представляет; обозначает
+required	необходимый; требуемый
+residence	пребывание; нахождение
+resistance	сопротивление
+respect	отношение; относительно
+resulting	полученный; возникающий в результате
+results	результаты
+review	обзор; рассмотрение
+rising	подъём; восходящий
+robust	устойчивый; надёжный
+role	роль
+same	тот же; одинаковый
+scientific	научный
+section	раздел; сечение
+sections	разделы
+selected	выбранный
+selection	выбор; выделение
+separate	отделять; отдельный
+separated	отделённый
+series	ряд; серия
+several	несколько
+shape	форма
+shapes	формы
+should	должен; следует
+show	показывать
+shown	показанный
+significantly	существенно; значительно
+similar	сходный; похожий
+simple	простой
+simulations	моделирования
+since	поскольку; с тех пор как
+single	одиночный; один
+size	размер
+small	малый; небольшой
+smaller	меньший; более мелкий
+so	так; поэтому
+solution	решение
+solutions	решения
+some	некоторые; несколько
+source	источник
+specific	конкретный; определённый
+speed	скорость
+standard	стандартный
+start	начало; начинать
+starting	исходный; начинающийся
+state	состояние; излагать
+stated	указанный; сформулированный
+step	шаг; этап
+steps	шаги; этапы
+still	всё ещё
+strong	сильный
+structure	структура
+study	исследование; изучать
+subject	подверженный; предмет
+subsequent	последующий
+substitute	заменять; подставлять
+such	такой; подобный
+support	поддержка; поддерживать
+surface	поверхность
+system	система
+systems	системы
+table	таблица
+task	задача
+technical	технический
+technique	методика; техника
+technology	технология
+temperature	температура
+tend	стремиться; иметь тенденцию
+term	термин
+terms	термины; условия
+test	испытание; тест
+the	определённый артикль
+than	чем
+that	что; который; тот
+then	затем; тогда
+their	их; свой
+them	их; им
+there	там; существует
+these	эти
+they	они
+thicker	более густой; более толстый
+this	этот; это
+those	те
+though	хотя
+through	через; посредством
+time	время
+to	к; для; чтобы
+together	вместе
+total	общий; суммарный
+toward	к; по направлению к
+towards	к; по направлению к
+traditional	традиционный
+transient	переходный; нестационарный
+trend	тенденция
+try	пытаться
+two	два
+type	тип; вид
+typical	типичный; характерный
+typically	обычно; как правило
+under	под; при
+understand	понимать
+uniform	равномерный; однородный
+unit	установка; аппарат; единица
+units	установки; единицы
+until	до тех пор пока
+upper	верхний
+use	использовать; применение
+used	используемый; применённый
+using	используя; с применением
+usually	обычно
+values	значения
+variables	переменные
+variations	изменения; вариации
+velocity	скорость
+version	версия
+very	очень
+via	посредством; через
+volume	объём
+volumetric	объёмный
+was	был; являлся
+way	способ; путь
+we	мы
+were	были
+when	когда; при
+where	где; в котором
+which	который; что
+while	пока; тогда как
+whole	целый; весь
+whose	чей; которого
+wide	широкий
+will	будет
+with	с; при наличии
+within	в пределах; внутри
+without	без
+work	работа; работать
+would	бы; мог бы
+zero	ноль; обнулять
+critical	критический; предельный
+crude	сырой; необработанный
+analysis	анализ
+dispersed	диспергированный; распределённый
+drop	капля; уменьшаться
+drops	капли; уменьшается
+collisions	столкновения
+grid	сетка; решётка; электродная решётка
+smallest	наименьший
+highest	наибольший; самый высокий
+high	высокий
+top	верх; верхняя часть
+bottom	низ; нижняя часть
+second	второй
+third	третий
+after	после
+fact	факт
+methodology	методология
+methodologies	методики; методы
+calculating	вычисление; рассчитывающий
+characterizing	характеризующий; определение характеристик
+estimates	оценки; оценивает
+supposing	предполагая
+overestimated	завышенный; переоценённый
+particular	конкретный; особый
+emerging	возникающий; появляющийся
+dynamics	динамика
+evidence	данные; доказательство
+numerically	численно
+boundary	граница; граничный
+rigorous	строгий; детальный
+scale	масштаб
+flowing	текущий; протекающий
+overcome	преодолевать; компенсировать
+resistant	устойчивый; стойкий
+suspended	взвешенный; суспендированный
+generation	образование; генерация
+generating	генерирующий; образуя
+gradually	постепенно
+tends	имеет тенденцию; стремится
+remainder	остаток
+occurs	происходит; возникает
+wells	скважины
+water-in-oil	вода в нефти (тип эмульсии)
+water-oil	водонефтяной
+water-in-oil emulsions	эмульсии типа «вода в нефти»
+electrodes	электроды
+field strength	напряжённость поля
+field intensity	напряжённость поля
+droplet populations	совокупности капель
+confining	обжимающий; ограничивающий
+confining pressure	обжимающее давление
+phase interface	граница раздела фаз
+ratios	отношения; коэффициенты
+approach	подход; приближаться
+approaches	подходы
+approximated	аппроксимированный
+underlying	лежащий в основе; базовый
+due to	вследствие; из-за
+based on	на основе
+namely	а именно
+especially	особенно
+cubic	кубический
+spherical	сферический
+criterion	критерий
+criteria	критерии
+threshold voltage	пороговое напряжение
+voltages	напряжения
+ambient	окружающий; нормальный
+ambient temperature	температура окружающей среды
+initially	первоначально
+includes	включает
+provides	обеспечивает; приводит
+minutes	минуты
+hour	час
+hours	часы
+balance	баланс; уравнение баланса
+distributed	распределённый
+population	совокупность; популяция
+separating	разделение; отделяя
+emulsifiers	эмульгаторы
+de-emulsifiers	деэмульгаторы
+tension	натяжение
+# v1.1: additional academic reading and petroleum process terms
+fundamental	фундаментальный; основополагающий
+strongly	сильно; значительно
+certain	определённый; некоторый
+rather	довольно; скорее
+shows	показывает
+leads	приводит; ведёт
+lead	вести; приводить
+lets	позволяет
+let	позволять
+press	давление; нажимать (по контексту)
+deformation	деформация
+variant	вариант
+specifically	в частности; конкретно
+furthermore	кроме того
+thereby	тем самым
+indeed	действительно
+additionally	дополнительно
+additives	добавки; присадки
+therein	в нём; в ней
+whereby	посредством чего
+accordingly	соответственно; следовательно
+primarily	главным образом
+essentially	по существу
+relatively	относительно
+considerably	существенно
+slightly	незначительно
+irrelevant	не относящийся к делу
+assumes	предполагает
+assumptions	допущения
+suppose	предположим
+account for	учитывать; объяснять
+accounted for	учтённый
+such as	такой как; например
+as well as	а также
+by means of	посредством; с помощью
+in contrast	в противоположность; напротив
+in fact	фактически; на самом деле
+at least	по меньшей мере
+at most	не более
+as follows	следующим образом
+as shown	как показано
+notably	в частности; примечательно
+worth noting	стоит отметить
+it is worth noting	следует отметить
+it should be noted	следует отметить
+on the contrary	напротив
+for instance	например
+for example	например
+instead of	вместо
+regardless of	независимо от
+beyond	за пределами
+throughout	на протяжении; во всём
+along	вдоль
+beneath	под; ниже
+prior	предшествующий; предварительный
+prior to	до; перед
+subsequently	впоследствии
+currently	в настоящее время
+formerly	ранее
+final	конечный; окончательный
+substantial	существенный; значительный
+insufficient	недостаточный
+sufficiently	в достаточной степени
+reliable	надёжный
+reliability	надёжность
+valid	действительный; корректный
+validation	проверка достоверности; валидация
+verified	подтверждённый; проверенный
+verify	проверять
+assessed	оценённый
+estimation	оценивание; оценка
+propose	предлагать
+proposal	предложение
+characterized	характеризуемый; охарактеризованный
+represented	представленный
+representation	представление; изображение
+correspondence	соответствие
+relate	соотносить; связывать
+proportion	доля; пропорция
+proportional	пропорциональный
+inversely proportional	обратно пропорциональный
+dependent	зависимый; зависящий
+independent	независимый
+dependency	зависимость
+variability	изменчивость
+uncertainty	неопределённость
+uncertain	неопределённый
+confidence interval	доверительный интервал
+error	ошибка; погрешность
+precision	точность; прецизионность
+limitation	ограничение
+upper bound	верхняя граница
+lower bound	нижняя граница
+narrow	узкий
+width	ширина
+length	длина
+depth	глубина
+thickness	толщина
+sized	заданный по размеру
+slope	наклон; угловой коэффициент
+intercept	пересечение; свободный член
+continuum	континуум; сплошная среда
+continuously	непрерывно
+steady	установившийся; стационарный
+stationary	стационарный; неподвижный
+static	статический
+stability criterion	критерий устойчивости
+sensitive	чувствительный
+insensitive	нечувствительный
+robustness	устойчивость к возмущениям
+converge	сходиться
+convergent	сходящийся
+divergent	расходящийся
+divergence	расходимость
+iteration step	шаг итерации
+solver	решатель; численный решатель
+inequality	неравенство
+conservation	сохранение
+conservation law	закон сохранения
+mass flow	массовый расход
+mass flow rate	массовый расход
+flow velocity	скорость потока
+residual	остаточный
+residue	остаток
+salts	соли
+brine	рассол
+saline	солёный
+coalescer efficiency	эффективность коалесцера
+separation process	процесс разделения
+phase boundary	граница раздела фаз
+phase equilibrium	фазовое равновесие
+phase change	фазовый переход
+droplet size distribution	распределение капель по размерам
+bubble	пузырёк
+bubbles	пузырьки
+repulsion	отталкивание
+polarized	поляризованный
+conductivity	проводимость
+resistivity	удельное сопротивление
+drag coefficient	коэффициент сопротивления
+drag force	сила сопротивления
+pressure drop	падение давления
+pressure gradient	градиент давления
+pressure vessel	сосуд под давлением
+heat transfer	теплопередача
+mass transfer	массоперенос
+momentum transfer	перенос количества движения
+heat capacity	теплоёмкость
+thermal conductivity	теплопроводность
+heat exchanger	теплообменник
+heat treatment	термическая обработка
+fluctuation	колебание; флуктуация
+oscillation	колебание
+perturbation	возмущение
+disturbance	возмущение; помеха
+boundary conditions	граничные условия
+initial conditions	начальные условия
+operating conditions	рабочие условия; условия эксплуатации
+experimental conditions	условия эксперимента
+# Additional scientific vocabulary / ScientificGlossary 1.2
+addition	добавление; дополнение
+additions	добавления
+alternate	переменный; чередующийся
+alternating	переменный; чередующийся
+applicable	применимый
+behalf	от имени
+concentrations	концентрации
+considers	рассматривает; учитывает
+convective	конвективный
+correlate	коррелировать
+cumbersome	сложный; трудоёмкий
+deposits	месторождения; залежи
+disposed	выведенный из эксплуатации; отработанный (контекст)
+efficient	эффективный
+ellipsoid	эллипсоид
+ellipsoids	эллипсоиды
+emphasized	подчёркнутый
+entrainers	добавки, ускоряющие процесс разделения (по контексту)
+equilibrium	равновесие
+exploitation	разработка; эксплуатация (месторождений)
+gap	разница; зазор; промежуток
+gaps	разрывы; промежутки
+implicit	неявный
+interacting	взаимодействующий
+introduction	введение; добавление
+limitations	ограничения
+long-term	долгосрочный
+macro-emulsion	макроэмульсия
+macro-emulsions	макроэмульсии
+micro-emulsion	микроэмульсия
+micro-emulsions	микроэмульсии
+preserve	сохранять
+preserves	сохраняет
+qualitative	качественный
+quantitative	количественный
+random	случайный
+remote	удалённый
+removal	удаление
+scattering	рассеяние
+stabilization	стабилизация
+tight	жёсткий; строгий (о требованиях)
+transition	переход
+undergo	претерпевать
+corrosion	коррозия
+corrosion rate	скорость коррозии
+scale formation	образование отложений
+scale inhibitor	ингибитор солеотложения
+pipeline corrosion	коррозия трубопровода
+fatigue	усталость материала
+fatigue failure	усталостное разрушение
+fracture aperture	раскрытие трещины
+fracture network	сеть трещин
+hydraulic conductivity	гидравлическая проводимость
+rock mechanics	механика горных пород
+well integrity	целостность скважины
+wellhead pressure	устьевое давление
+water treatment	водоподготовка
+crude oil dehydration	обезвоживание нефти
+oil dehydration	обезвоживание нефти
+oil desalting	обессоливание нефти
+desalting unit	установка обессоливания
+demulsification	деэмульсация
+coalescence rate	скорость коалесценции
+droplet collision	столкновение капель
+droplet growth	укрупнение капель
+dispersed droplets	диспергированные капли
+electric field strength	напряжённость электрического поля
+electrical conductivity	электропроводность
+dielectric permittivity	диэлектрическая проницаемость
+electric potential	электрический потенциал
+salt content	содержание солей
+residual water	остаточная вода
+oil phase	нефтяная фаза
+mass fraction	массовая доля
+material balance	материальный баланс
+energy balance	энергетический баланс
+balance equation	уравнение баланса
+initial value problem	задача Коши
+finite difference method	метод конечных разностей
+finite element method	метод конечных элементов
+numerical simulation	численное моделирование
+model validation	валидация модели; проверка адекватности модели
+model verification	верификация модели
+model uncertainty	неопределённость модели
+measurement error	погрешность измерения
+measurement uncertainty	неопределённость измерения
+repeatability	повторяемость
+reproducibility	воспроизводимость
+experimental evidence	экспериментальные данные; экспериментальное подтверждение
+operating point	рабочая точка
+operating pressure	рабочее давление
+operating temperature	рабочая температура
+turbulent flow	турбулентное течение
+Reynolds number	число Рейнольдса
+buoyancy force	архимедова сила; выталкивающая сила
+shear stress	касательное напряжение
+shear rate	скорость сдвига
+yield stress	предел текучести
+fluid rheology	реология жидкости
+drilling fluid	буровой раствор
+well completion	заканчивание скважины
+oil production	добыча нефти
+upstream processing	подготовка продукции скважин
+pressure monitoring	контроль давления
+process monitoring	мониторинг процесса
+process optimization	оптимизация процесса
+process control	управление технологическим процессом
+parameter estimation	оценивание параметров
+sensitivity coefficient	коэффициент чувствительности
+static pressure	статическое давление
+dynamic pressure	динамическое давление
+water droplets	капли воды
+oil-water separation	разделение нефти и воды
+corrosion inhibitor	ингибитор коррозии
+wall thickness	толщина стенки
+steel pipeline	стальной трубопровод
+pump efficiency	коэффициент полезного действия насоса
+rotational speed	частота вращения
+energy consumption	энергопотребление
+ordinary differential equation	обыкновенное дифференциальное уравнение
+partial differential equation	дифференциальное уравнение в частных производных
+treatment	обработка; очистка; лечение (в зависимости от контекста)
+surfactant	поверхностно-активное вещество; ПАВ
+strength	прочность; прочностная характеристика; сила
+thermal conductivity	теплопроводность
+heat transfer	теплопередача; теплообмен
+seepage	фильтрация; просачивание
+fracture aperture	раскрытие трещины
+aperture	раскрытие; ширина трещины
+pore pressure	поровое давление
+shear strength	прочность на сдвиг
+confining pressure	обжимающее давление
+suspended droplets	взвешенные капли
+adsorption	адсорбция
+hydraulic fracturing	гидравлический разрыв пласта
+reservoir modeling	моделирование пласта
+multiphase flow	многофазный поток
+pressure gradient	градиент давления
+particle settling	осаждение частиц
+fluid saturation	насыщенность флюидом
+anisotropy	анизотропия
+tortuosity	извилистость пути потока; извилистость поровых каналов
+hydrodynamic	гидродинамический
+fracturing	трещинообразование; гидроразрыв пласта (по контексту)
+diffusion	диффузия
+sandstone	песчаник
+saturation	насыщенность; степень насыщения
+morphology	морфология; особенности формы и строения
+oleophilic	олеофильный; смачиваемый нефтью
+capillary	капиллярный
+intrinsic	собственный; внутренний
+hydraulic	гидравлический
+hydrophilic	гидрофильный; смачиваемый водой
+porous	пористый
+hydrodynamic dispersion	гидродинамическая дисперсия
+capillary pressure	капиллярное давление
+fluid transport	перенос жидкости
+hydraulic properties	гидравлические свойства
+droplet morphology	морфология капель
+oil adsorption	адсорбция нефти
+fluid flow	течение жидкости
+permeability tensor	тензор проницаемости
+rock deformation	деформация горной породы
+pore geometry	геометрия пор
+stress ratio	соотношение напряжений
+field observations	натурные наблюдения
+relative permeability	относительная проницаемость
+confining stress	обжимающее напряжение
+shear slip	сдвиговое скольжение
+multiphase fluid flow	многофазное течение
+microscopy	микроскопия
+droplet coalescence	коалесценция капель
+corona discharge	коронный разряд
+needle-plate electrode	электрод типа игла—пластина
+electrode corrosion	коррозия электродов
+interfacial pressure	межфазное давление
+surface charge	поверхностный заряд
+zeta potential	дзета-потенциал
+non-contact	бесконтактный
+electrohydrodynamic	электрогидродинамический
+electrohydrodynamics	электрогидродинамика
+molecular dynamics	молекулярная динамика
+nanodroplet	нанокапля
+nanodroplets	нанокапли
+water-cut	обводнённость продукции
+coagulation	коагуляция
+flocculation	флокуляция
+interfacial film	межфазная плёнка
+oil-water interface	граница раздела нефть—вода
+high-voltage	высоковольтный
+electrode configuration	конфигурация электродов
+charge transfer	перенос заряда
+demulsification efficiency	эффективность деэмульсации
+demulsifier concentration	концентрация деэмульгатора
+oil recovery	нефтеотдача
+saturation pressure	давление насыщения
+permeability anisotropy	анизотропия проницаемости
+water flooding	заводнение
+polymer flooding	полимерное заводнение
+pore size distribution	распределение пор по размерам
+pore-scale	поровый масштаб
+viscoelasticity	вязкоупругость
+fracture propagation	распространение трещины
+wettability	смачиваемость
+surface roughness	шероховатость поверхности
+dimensionless	безразмерный
+contact angle	краевой угол смачивания
+porous medium	пористая среда
+oil droplet	капля нефти
+experimental setup	экспериментальная установка
+boundary layer	пограничный слой
+corona	корона; коронный (в составе термина)
+zeta	дзета (в составе термина дзета-потенциал)
+molecular	молекулярный
+flooding	заводнение
+gradient	градиент
+maintenance	техническое обслуживание
+charged	заряженный
+needle	игла; игольчатый электрод
+nanoemulsion	наноэмульсия
+
+</script><script>
+/* ScientificGlossary Reader v1.8 — direct page navigation and review workflow PDF import, offline cache and multi-document safety */
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const DB_NAME = 'scientific-glossary-web';
+  const DB_VERSION = 3;
+  let db;
+  let pdfDoc = null;
+  let readerReady = false;
+  let documentOpenSerial = 0; // Reject outdated async document loads.
+  let currentDoc = null;
+  let currentPage = 1;
+  let zoom = 1;
+  let currentPageText = '';
+  let pageWordBoxes = []; // On-page word rectangles in PDF canvas CSS pixels
+  let pageTextOffsets = []; // Offsets of text runs for the exact example context
+  let activePageRender = 0;
+  let currentRenderTask = null;
+  let textCanvasCtx = document.createElement('canvas').getContext('2d');
+  let dictionary = new Map();
+  let pendingTerm = '';
+  let pendingEditId = null;
+  let pendingSource = null;
+  let phraseStart = null;
+  let phraseMode = false;
+  let selecting = false;
+  let pageHasText = false;
+  let readingLines = [];
+  let readingTokens = [];
+  let currentSelectedBox = null;
+  let currentPageViewport = null;
+  let dictionaryBaseCount = 0;
+  const ocrCache = new Map();
+  let onlineRequestSerial = 0;
+  let onlineAbort = null;
+  let exampleAbort = null;
+  let editingTranslationByUser = false;
+  let editingExampleTranslationByUser = false;
+  let latestSuggestion = null;
+
+  let deferredInstallPrompt = null;
+  let toastTimer;
+  let resizeTimer;
+  let lastModalFocus = null;
+  function switchMobileView(view) {
+    if (!['read','library','glossary'].includes(view)) return;
+    document.body.dataset.view=view;
+    document.querySelectorAll('.mobile-tab').forEach(b => {
+      const active = b.dataset.viewTarget === view;
+      b.classList.toggle('active',active);
+      b.setAttribute('aria-current',active?'page':'false');
+    });
+  }
+  document.querySelectorAll('.mobile-tab').forEach(b=>b.addEventListener('click',()=>switchMobileView(b.dataset.viewTarget)));
+  switchMobileView('library');
+  // Distraction-free reading mode for laptops and tablets; mobile already has tabs.
+  $('focusReaderBtn').addEventListener('click',()=>{
+    const focused=document.body.classList.toggle('focus-reading');
+    const b=$('focusReaderBtn');
+    b.setAttribute('aria-pressed',String(focused));
+    b.textContent=focused?'Показать библиотеку':'Режим чтения';
+    b.title=focused?'Вернуться к библиотеке и глоссарию':'Скрыть боковую панель и увеличить PDF';
+    if(pdfDoc)requestAnimationFrame(()=>renderPage());
+  });
+
+  const elements = {
+    pdfInput: $('pdfInput'), documentsList: $('documentsList'), glossaryList: $('glossaryList'),
+    entryCount: $('entryCount'), glossarySearch: $('glossarySearch'), currentDocName: $('currentDocName'),
+    pageInfo: $('pageInfo'), pageCounter: $('pageCounter'), pageWrap: $('pageWrap'), pageContainer: $('pageContainer'),
+    canvas: $('pdfCanvas'), textLayer: $('textLayer'), welcome: $('welcome'), viewport: $('readerViewport'),
+    prevPage: $('prevPage'), nextPage: $('nextPage'), zoomOut: $('zoomOut'), zoomIn: $('zoomIn'), zoomValue: $('zoomValue'),
+    highlights: $('selectionHighlights'), ocrStatus: $('ocrStatus'), phraseButton: $('selectPhraseBtn'),
+    modal: $('termModal'), modalTerm: $('modalTerm'), translationInput: $('translationInput'), exampleInput: $('exampleInput'),
+    sourceInfo: $('sourceInfo'), pageSource: $('pageSource'), dictionaryStatus: $('dictionaryStatus'), toast: $('toast'),
+  };
+
+  function showToast(message, duration = 4500) {
+    elements.toast.textContent = message;
+    elements.toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => elements.toast.classList.remove('show'), duration);
+  }
+  function makeId() { return (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`); }
+  function openDb() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      request.onupgradeneeded = () => {
+        const d = request.result;
+        if (!d.objectStoreNames.contains('documents')) d.createObjectStore('documents', { keyPath: 'id' });
+        if (!d.objectStoreNames.contains('entries')) d.createObjectStore('entries', { keyPath: 'id' });
+        if (!d.objectStoreNames.contains('customDictionary')) d.createObjectStore('customDictionary', { keyPath: 'term' });
+        if (!d.objectStoreNames.contains('translationCache')) d.createObjectStore('translationCache', { keyPath: 'term' });
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+  function store(name, mode = 'readonly') { return db.transaction(name, mode).objectStore(name); }
+  function dbPut(name, value) { return new Promise((resolve, reject) => { const r = store(name, 'readwrite').put(value); r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); }); }
+  function dbGet(name, key) { return new Promise((resolve, reject) => { const r = store(name).get(key); r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); }); }
+  function dbAll(name) { return new Promise((resolve, reject) => { const r = store(name).getAll(); r.onsuccess = () => resolve(r.result || []); r.onerror = () => reject(r.error); }); }
+  function dbDelete(name, key) { return new Promise((resolve, reject) => { const r = store(name, 'readwrite').delete(key); r.onsuccess = () => resolve(); r.onerror = () => reject(r.error); }); }
+
+  async function loadDictionary() {
+    try {
+      let text = window.SG_DICTIONARY_TEXT || document.getElementById('embeddedDictionary')?.textContent;
+      if (!text) {
+        const response = await fetch('assets/dictionary.tsv');
+        if (!response.ok) throw new Error('dictionary fetch failed');
+        text = await response.text();
+      }
+      for (const line of text.split(/\r?\n/)) {
+        if (!line || line.startsWith('#')) continue;
+        const [term, translation] = line.split('\t');
+        if (term && translation) dictionary.set(term.trim().toLowerCase(), translation.trim());
+      }
+      // Terms found in the sample article; concise contextual translations.
+      const additions = {
+        'electrostatic coalescer':'электростатический коалесцер; электродегидратор',
+        'rigorous modeling':'строгое математическое моделирование',
+        'first-principle model':'модель, основанная на фундаментальных физических законах',
+        'dispersed phase':'дисперсная фаза', 'continuous phase':'непрерывная фаза',
+        'droplet diameter':'диаметр капли', 'interfacial tension':'межфазное натяжение',
+        'electrical field':'электрическое поле', 'electric field':'электрическое поле',
+        'permittivity':'диэлектрическая проницаемость', 'buoyancy':'выталкивающая сила; сила Архимеда',
+        'drag force':'сила сопротивления', 'residence time':'время пребывания',
+        'volume fraction':'объёмная доля', 'boundary conditions':'граничные условия',
+        'numerical integration':'численное интегрирование', 'sensitivity analysis':'анализ чувствительности',
+        'water-in-oil emulsion':'эмульсия типа «вода в нефти»', 'droplet distribution':'распределение капель по размерам',
+        'coalescence coefficient':'коэффициент коалесценции', 'oil viscosity':'вязкость нефти',
+        'water concentration':'концентрация воды', 'critical diameter':'критический диаметр',
+        'volumetric flow rate':'объёмный расход', 'mass balance':'материальный баланс',
+        'numerical solution':'численное решение', 'operating conditions':'рабочие условия; условия эксплуатации',
+        'phase separation':'разделение фаз', 'crude oil':'сырая нефть',
+      };
+      Object.entries(additions).forEach(([k,v]) => dictionary.set(k,v));
+      dictionaryBaseCount = dictionary.size;
+    } catch (err) {
+      console.warn('Dictionary could not be loaded', err);
+      showToast('Не удалось загрузить встроенный словарь. Проверьте файлы приложения.');
+    }
+  }
+
+  // Browser-side translation provider: MyMemory public GET API (https://mymemory.translated.net/doc/spec.php).
+  // The provider receives only a selected word/phrase, or a sentence after the user explicitly clicks the button.
+  // No API keys or full PDF bytes are sent. Anonymous limit ~5,000 characters/day; quota and CORS may change.
+  function currentTranslationMode() {return $('translationMode').value==='offline'?'offline':'auto';}
+  function internetCandidate() {return navigator.onLine !== false;}
+  function decodeHtmlText(value) {const node=document.createElement('textarea');node.innerHTML=String(value||'');return node.value.trim();}
+  async function queryMyMemory(input, signal) {
+    const phrase=String(input||'').trim();
+    if(!phrase)throw new Error('Нет текста для перевода.');
+    if(new TextEncoder().encode(phrase).length>500)throw new Error('Слишком длинный текст для онлайн-сервиса (не более 500 байт).');
+    const url=new URL('https://api.mymemory.translated.net/get');
+    url.searchParams.set('q',phrase);url.searchParams.set('langpair','en|ru');
+    const response=await fetch(url.toString(),{method:'GET',mode:'cors',cache:'no-store',signal});
+    if(!response.ok)throw new Error('HTTP '+response.status);
+    const data=await response.json();
+    if(Number(data?.responseStatus)!==200)throw new Error(String(data?.responseDetails||'Поставщик отклонил запрос.').slice(0,120));
+    const value=decodeHtmlText(data?.responseData?.translatedText);
+    if(!value || /MYMEMORY WARNING|QUOTA|LIMIT EXCEEDED|INVALID LANGUAGE|NO MATCH/i.test(value) || value.toLowerCase()===phrase.toLowerCase())
+      throw new Error('Подходящий перевод не получен.');
+    if(value.length>1200)throw new Error('Ответ переводчика слишком длинный.');
+    return value;
+  }
+  async function fetchWithTimeout(input, abortTarget, ms=6500){
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),ms);
+    if(abortTarget==='word')onlineAbort=controller;else exampleAbort=controller;
+    try{return await queryMyMemory(input,controller.signal);}
+    finally{clearTimeout(timer);if(abortTarget==='word'&&onlineAbort===controller)onlineAbort=null;
+      if(abortTarget==='example'&&exampleAbort===controller)exampleAbort=null;}
+  }
+  function addTranslationOption(kind, value) {
+    if(!value)return;
+    const root=$('translationOptions');
+    if([...root.querySelectorAll('.translation-choice')].some(el=>el.dataset.value===value))return;
+    const b=document.createElement('button');b.type='button';b.className='translation-choice';b.dataset.value=value;
+    const tag=document.createElement('b');tag.textContent=kind;
+    const label=document.createElement('span');label.textContent=value;
+    b.append(tag,label);
+    b.addEventListener('click',()=>{elements.translationInput.value=value;editingTranslationByUser=true;
+      $('reviewedCheckbox').checked=false;
+      elements.dictionaryStatus.textContent=`Выбран вариант: ${kind}. Проверьте значение в контексте.`;});
+    root.append(b);
+  }
+  async function translateSelectedTerm(term, local, serial) {
+    const key=normalizeTerm(term);
+    if(currentTranslationMode()==='offline'){
+      let saved=null;
+      try { saved=await dbGet('translationCache',key); } catch (error) { console.warn('Offline translation cache unavailable',error); }
+      if(serial!==onlineRequestSerial || pendingTerm!==term || elements.modal.classList.contains('hidden'))return;
+      if(saved?.translation){
+        addTranslationOption('Из памяти устройства',saved.translation);
+        if(!local && !editingTranslationByUser)elements.translationInput.value=saved.translation;
+      }
+      elements.dictionaryStatus.textContent=local
+        ? 'Офлайн-словарь — основной. Интернет-запросы выключены.'
+        : (saved?.translation ? 'Без интернета: перевод из ранее сохранённого кэша.' : 'Слова нет в офлайн-словаре и памяти переводов. Введите перевод вручную.');
+      return;
+    }
+    let cached=null;
+    try{cached=await dbGet('translationCache',key);}catch(err){console.warn('Translation cache unavailable',err);}
+    if(serial!==onlineRequestSerial||pendingTerm!==term||elements.modal.classList.contains('hidden'))return;
+    if(cached?.translation){
+      addTranslationOption('Кэш онлайн',cached.translation);
+      // Technical and user-authored meanings take precedence over machine output.
+      if(!local && !editingTranslationByUser)elements.translationInput.value=cached.translation;
+      elements.dictionaryStatus.textContent=local
+        ?'Локальный научный перевод выбран основным. Онлайн-вариант доступен для сравнения.'
+        :'Перевод ранее получен онлайн и сохранён в кэше устройства.';
+    }
+    if(!internetCandidate()){
+      elements.dictionaryStatus.textContent=cached?.translation?'Нет интернета · используем сохранённый перевод.':(local?'Нет интернета · используем локальный словарь.':'Нет интернета · слова нет в локальном словаре.');
+      return;
+    }
+    elements.dictionaryStatus.textContent='Ищу онлайн-перевод… Локальный вариант уже доступен.';
+    try {
+      const translated=await fetchWithTimeout(term,'word');
+      if(serial!==onlineRequestSerial||pendingTerm!==term||elements.modal.classList.contains('hidden'))return;
+      if(local)addTranslationOption('Локально',local);
+      addTranslationOption('MyMemory',translated);
+      if(!local && !editingTranslationByUser)elements.translationInput.value=translated;
+      elements.dictionaryStatus.textContent=local
+        ?'Научный словарь — основной; альтернативный перевод MyMemory доступен ниже. Проверьте значение.'
+        :'Получен онлайн-перевод MyMemory · проверьте научный контекст.';
+      dbPut('translationCache',{term:key,translation:translated,at:Date.now()}).catch(err=>console.warn('Cache save failed',err));
+    }catch(error){
+      if(serial!==onlineRequestSerial||pendingTerm!==term||elements.modal.classList.contains('hidden'))return;
+      elements.dictionaryStatus.textContent=(cached?.translation?'Сервис недоступен · используется сохранённый онлайн-перевод.':
+        local?'Сервис недоступен · используется офлайн-словарь.':'Сервис недоступен и перевода нет в словаре · впишите вручную.')+
+        (error?.name==='AbortError'?' (тайм-аут)':'');
+    }
+  }
+  async function translateExampleOnline() {
+    if(exampleAbort)exampleAbort.abort();
+    const text=elements.exampleInput.value.trim();
+    if(!text){$('exampleTranslationStatus').textContent='Сначала укажите английское предложение из статьи.';return;}
+    if(currentTranslationMode()==='offline'){$('exampleTranslationStatus').textContent='Режим «Только офлайн»: онлайн-перевод отключён.';return;}
+    if(!internetCandidate()){$('exampleTranslationStatus').textContent='Нет интернета. Английский пример сохранён без изменений.';return;}
+    const before=pendingTerm;
+    const old=text;
+    const button=$('translateExampleBtn');button.disabled=true;
+    $('exampleTranslationStatus').textContent='Перевожу предложение через MyMemory…';
+    try{
+      const translated=await fetchWithTimeout(text,'example',8000);
+      if(pendingTerm!==before||elements.modal.classList.contains('hidden')||elements.exampleInput.value.trim()!==old)return;
+      if(!editingExampleTranslationByUser) $('exampleTranslationInput').value=translated;
+      $('exampleTranslationStatus').textContent='Перевод предложен MyMemory. Исходное английское предложение не изменено; проверьте точность.';
+    }catch(e){
+      if(elements.modal.classList.contains('hidden'))return;
+      $('exampleTranslationStatus').textContent=e?.name==='AbortError'?'Нет ответа от переводчика (тайм-аут).':'Онлайн-перевод недоступен. Оригинал сохранён.';
+    }finally{button.disabled=false;}
+  }
+  $('translateExampleBtn').addEventListener('click',translateExampleOnline);
+  // Manual service check: does not send the PDF or the current reading context.
+  async function checkOnlineTranslation(){
+    const b=$('checkTranslationBtn');const status=$('providerStatus');
+    if(currentTranslationMode()==='offline'){
+      status.textContent='Офлайн-режим: проверка выключена. Переключите на «Авто».';return;
+    }
+    b.disabled=true;status.textContent='Проверяю доступность онлайн-переводчика…';
+    try{
+      const v=await fetchWithTimeout('water','word',5500);
+      status.textContent='✓ Онлайн-переводчик отвечает. Тестовое слово water: '+v.slice(0,65);
+    }catch(e){
+      status.textContent='Сервис сейчас недоступен. Локальный словарь продолжит работу.';
+    }finally{b.disabled=false;}
+  }
+  $('checkTranslationBtn').addEventListener('click',checkOnlineTranslation);
+  elements.translationInput.addEventListener('input',()=>{editingTranslationByUser=true;$('reviewedCheckbox').checked=false;});
+  $('exampleTranslationInput').addEventListener('input',()=>{editingExampleTranslationByUser=true;});
+  $('translationMode').addEventListener('change',()=>{
+    try{localStorage.setItem('sg-translation-mode',currentTranslationMode());}catch(_){}
+    ++onlineRequestSerial;
+    if(onlineAbort)onlineAbort.abort();if(exampleAbort)exampleAbort.abort();
+    if(!elements.modal.classList.contains('hidden')&&!pendingEditId){
+      const word=pendingTerm, local=findTranslation(word);
+      if(currentTranslationMode()==='auto')translateSelectedTerm(word,local,++onlineRequestSerial);
+      else elements.dictionaryStatus.textContent=local?'Офлайн-словарь активен.':'Офлайн-режим · перевода нет в словаре.';
+    }
+  });
+  try{$('translationMode').value=localStorage.getItem('sg-translation-mode')==='offline'?'offline':'auto';}catch(_){}
+
+  function renderDocuments(docs) {
+    $('documentGoal').textContent = `${docs.length} материалов · цель 10`;
+    $('totalPages').textContent = `${docs.reduce((sum,d)=>sum+(Number(d.pages)||0),0)} страниц`;
+    $('libraryMeterFill').style.width = `${Math.min(100, docs.length*10)}%`;
+    document.querySelector('.library-meter').setAttribute('aria-valuenow', String(Math.min(10,docs.length)));
+    elements.documentsList.replaceChildren();
+    if (!docs.length) {
+      const empty = document.createElement('div'); empty.className = 'empty-small'; empty.textContent = 'Пока нет документов. Добавьте PDF-файл.'; elements.documentsList.append(empty); return;
+    }
+    docs.sort((a,b) => (b.addedAt || 0) - (a.addedAt || 0));
+    for (const doc of docs) {
+      const row = document.createElement('div'); row.className = `document-item ${currentDoc?.id === doc.id ? 'active' : ''}`;
+      const icon = document.createElement('div'); icon.className = 'doc-mini'; icon.textContent = 'PDF';
+      const body = document.createElement('div'); body.style.minWidth = '0';
+      const title = document.createElement('strong'); title.textContent = doc.name;
+      const meta = document.createElement('small'); meta.textContent = `${doc.pages ? doc.pages+' стр.' : 'PDF'} · ${new Date(doc.addedAt).toLocaleDateString('ru-RU')}`;
+      body.append(title, meta); row.append(icon, body);
+      row.addEventListener('click', () => openDocument(doc.id));
+      const del=document.createElement('button');del.className='remove-doc';del.textContent='×';del.title='Удалить PDF (глоссарий сохранится)';
+      del.addEventListener('click',async e=>{
+        e.stopPropagation();
+        if(!confirm('Удалить PDF из библиотеки? Записи глоссария сохранятся.')) return;
+        await dbDelete('documents',doc.id);
+        if(currentDoc?.id===doc.id){++documentOpenSerial;currentDoc=null;pdfDoc=null;elements.welcome.classList.remove('hidden');elements.pageWrap.classList.add('hidden');elements.currentDocName.textContent='Документ не открыт';elements.pageInfo.textContent='Добавьте PDF';}
+        await refreshDocuments(); await refreshGlossary();showToast('PDF удалён. Глоссарий сохранён.');
+      });row.append(del);
+      elements.documentsList.append(row);
+    }
+  }
+  async function refreshDocuments() { renderDocuments(await dbAll('documents')); }
+
+  // Existing libraries created before v1.7 have no fingerprints. Compare their
+  // actual binary content when the filename/length match, never just metadata.
+  function sameBytes(left,right) {
+    if(!left||!right || left.byteLength!==right.byteLength)return false;
+    const a=new Uint8Array(left),b=new Uint8Array(right);
+    for(let i=0;i<a.length;i++)if(a[i]!==b[i])return false;
+    return true;
+  }
+  async function fileFingerprint(arrayBuffer) {
+    try {
+      if(crypto?.subtle?.digest){
+        const hash=await crypto.subtle.digest('SHA-256',arrayBuffer);
+        return Array.from(new Uint8Array(hash),b=>b.toString(16).padStart(2,'0')).join('');
+      }
+    } catch(e) { console.warn('PDF hash not available',e); }
+    return null;
+  }
+
+  // PDF.js can transfer the Uint8Array to its worker. That detaches the
+  // ArrayBuffer; never give PDF.js the only copy that we intend to store.
+  // Source: https://mozilla.github.io/pdf.js/api/draft/module-pdfjsLib.html
+  async function handlePdfUpload(file) {
+    if (!file) return;
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      showToast('Пожалуйста, выберите файл PDF.'); return;
+    }
+    if(!window.pdfjsLib){showToast('Для чтения PDF нужен интернет при первом запуске PDF.js.',7000);return;}
+    let stage = 'read';
+    try {
+      showToast('Читаю файл PDF…');
+      const originalData = await file.arrayBuffer();
+      if (!originalData.byteLength) throw new Error('Файл пуст.');
+      if(originalData.byteLength>80*1024*1024)showToast('Большой учебник: сохранение более 80 МБ может превысить память браузера.',6500);
+      // The independent copy may be transferred; originalData stays intact.
+      stage = 'parse';
+      const task = pdfjsLib.getDocument({ data: new Uint8Array(originalData.slice(0)) });
+      const loaded = await task.promise;
+      const numPages = loaded.numPages;
+      // Open the existing copy rather than silently adding duplicate PDFs.
+      const fingerprint=await fileFingerprint(originalData);
+      const candidates=(await dbAll('documents')).filter(d=>d.size===originalData.byteLength);
+      const duplicate=candidates.find(d=>(fingerprint && d.fingerprint===fingerprint) ||
+        (d.name===file.name && sameBytes(d.data,originalData)));
+      if(duplicate) { await loaded.destroy(); await openDocument(duplicate.id); showToast('Такая копия PDF уже есть в библиотеке. Открыт сохранённый файл.'); return; }
+      if (!numPages) throw new Error('В документе не обнаружены страницы.');
+      // Releasing the validation document does not affect our saved bytes.
+      try { await loaded.destroy(); } catch (_) { /* best effort */ }
+
+      stage = 'save';
+      const doc = {
+        id: makeId(), name: file.name, size: originalData.byteLength,
+        addedAt: Date.now(), pages: numPages, data: originalData, fingerprint,
+      };
+      await dbPut('documents', doc);
+      await refreshDocuments();
+      stage = 'open';
+      const opened = await openDocument(doc.id);
+      if (opened) showToast('PDF добавлен в библиотеку и открыт.', 3200);
+      else showToast('PDF сохранён, но страницу не удалось отобразить. Подробности в консоли.', 6000);
+    } catch (error) {
+      console.error('PDF import failed at stage:', stage, error);
+      const name = error?.name || '';
+      let msg;
+      if (name === 'PasswordException') msg = 'Этот PDF защищён паролем. Откройте файл без защиты.';
+      else if (name === 'InvalidPDFException' || name === 'MissingPDFException') msg = 'Не удалось прочитать формат PDF. Проверьте документ.';
+      else if (name === 'QuotaExceededError') msg = 'Недостаточно свободного места в браузере для сохранения PDF.';
+      else if (stage === 'save' || name === 'DataCloneError') msg = 'PDF прочитан, но браузер не смог сохранить его. Проверьте разрешения и свободное место.';
+      else msg = `Ошибка при загрузке PDF (${stage}): ${String(error?.message || name || 'неизвестная причина').slice(0, 150)}`;
+      showToast(msg, 8000);
+    } finally { elements.pdfInput.value = ''; }
+  }
+
+  async function openDocument(id) {
+    readerReady = false;
+    const openToken=++documentOpenSerial;
+    try {
+      const doc = await dbGet('documents', id);
+      if (!doc || openToken!==documentOpenSerial) return false;
+      // dbGet supplies an independent structured-clone of stored data.
+      const task = pdfjsLib.getDocument({ data: new Uint8Array(doc.data) });
+      const openedPdf = await task.promise;
+      if(openToken!==documentOpenSerial){try{await openedPdf.destroy();}catch(_){} return false;}
+      if(pdfDoc && pdfDoc !== openedPdf){ try { await pdfDoc.destroy(); } catch(_) {} }
+      if(openToken!==documentOpenSerial){try{await openedPdf.destroy();}catch(_){} return false;}
+      pdfDoc = openedPdf; currentDoc = doc;
+      let savedPage=1;
+      try{savedPage=Number(localStorage.getItem('sg-page-'+doc.id))||1;}catch(_){}
+      currentPage = Math.max(1,Math.min(pdfDoc.numPages,savedPage)); zoom = 1;
+      phraseMode=false; phraseStart=null; elements.phraseButton.classList.remove('btn-primary');
+      elements.currentDocName.textContent = doc.name;
+      elements.pageInfo.textContent = `${pdfDoc.numPages} страниц · PDF хранится на этом устройстве`;
+      elements.welcome.classList.add('hidden'); elements.pageWrap.classList.remove('hidden');
+      await renderPage();
+      await refreshDocuments();
+      switchMobileView('read');
+      return true;
+    } catch (error) {
+      console.error('PDF open/render failed', error);
+      if(openToken===documentOpenSerial)showToast(`Не удалось отобразить страницу: ${String(error?.message || error).slice(0, 140)}`, 7500);
+      return false;
+    }
+  }
+
+  // Jump to any page, including long textbooks. Do not accept invalid or
+  // out-of-range pages: a mistyped number must not replace the PDF canvas.
+  function jumpToPage() {
+    if (!pdfDoc) return;
+    const input=$('pageJump');
+    const n=Number(input.value);
+    if(!Number.isSafeInteger(n) || n<1 || n>pdfDoc.numPages){
+      input.value=String(currentPage);
+      showToast(`Введите страницу от 1 до ${pdfDoc.numPages}.`,3200);
+      return;
+    }
+    if(n!==currentPage){currentPage=n;renderPage();}
+  }
+  $('pageJump').addEventListener('change',jumpToPage);
+  $('pageJump').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();jumpToPage();e.target.blur();}});
+
+  async function renderPage() {
+    readerReady = false;
+    if (!pdfDoc) return;
+    // Cancel out-of-order visual updates caused by rapid page turning/zoom.
+    const renderToken = ++activePageRender;
+    // PDF.js does not allow simultaneous render tasks on one canvas.
+    if (currentRenderTask) {
+      try { currentRenderTask.cancel(); await currentRenderTask.promise; } catch (_) { /* canceled */ }
+      currentRenderTask = null;
+    }
+    if (renderToken !== activePageRender) return;
+    const page = await pdfDoc.getPage(currentPage);
+    if (renderToken !== activePageRender) return;
+    if (currentDoc?.id) try {localStorage.setItem('sg-page-'+currentDoc.id, String(currentPage));} catch(_) {}
+    elements.ocrStatus.textContent='Подготавливаю текст страницы…';
+    elements.highlights.replaceChildren();
+    phraseStart=null;
+    const base = page.getViewport({ scale: 1 });
+    const maxWidth = Math.max(260, elements.viewport.clientWidth - 42);
+    // On phones, fitting a two-column A4 page to 340px makes words ~5px
+    // tall. Default to a readable column-sized page and allow horizontal pan.
+    const fitScale = window.innerWidth <= 760 ? Math.max(1.28, Math.min(1.5,maxWidth / base.width)) : Math.min(1.5, maxWidth / base.width);
+    const scale = fitScale * zoom;
+    const viewport = page.getViewport({ scale }); currentPageViewport=viewport;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const canvas = elements.canvas; const context = canvas.getContext('2d', { alpha: false });
+    canvas.width = Math.floor(viewport.width * dpr); canvas.height = Math.floor(viewport.height * dpr);
+    canvas.style.width = `${viewport.width}px`; canvas.style.height = `${viewport.height}px`;
+    elements.pageContainer.style.width = `${viewport.width}px`; elements.pageContainer.style.height = `${viewport.height}px`;
+    elements.textLayer.replaceChildren();
+    elements.textLayer.style.width = `${viewport.width}px`; elements.textLayer.style.height = `${viewport.height}px`;
+    pageWordBoxes = [];
+    pageTextOffsets = [];
+    readingLines=[];readingTokens=[];currentSelectedBox=null;
+    try {
+      currentRenderTask = page.render({ canvasContext: context, viewport, transform: dpr !== 1 ? [dpr,0,0,dpr,0,0] : null });
+      try { await currentRenderTask.promise; }
+      finally { if (renderToken === activePageRender) currentRenderTask = null; }
+      if (renderToken !== activePageRender) return;
+      const textContent = await page.getTextContent();
+      if (renderToken !== activePageRender) return;
+      const chunks = [];
+      let chars = 0;
+      for (const [index, item] of textContent.items.entries()) {
+        if (!item.str) continue;
+        const str = item.str;
+        // Keep exact item-to-sentence correspondence rather than searching the
+        // first occurrence of a word elsewhere on the page.
+        pageTextOffsets[index] = chars;
+        chunks.push(str, ' ');
+        chars += str.length + 1;
+      }
+      currentPageText = chunks.join('');
+      // Hit detection is based on the geometry in the PDF itself. Do not rely
+      // on caretRangeFromPoint: hidden PDF.js text spans may be offset relative
+      // to the painted page, especially on zoom and in two-column papers.
+      pageWordBoxes = layoutWordBoxes(textContent, viewport);
+      // Selection uses PDF coordinates, not PDF.js's invisible HTML text layer.
+      elements.textLayer.replaceChildren();
+      readingLines = buildReadingLines(pageWordBoxes, viewport.width);
+      if (renderToken !== activePageRender) return;
+      pageHasText = pageWordBoxes.length > 0;
+      if(!pageHasText) {elements.ocrStatus.textContent='Скан: нажмите OCR скана или внесите термин вручную';document.body.classList.add('reader-more-open');$('moreReaderTools').setAttribute('aria-expanded','true');$('moreReaderTools').textContent='Скрыть инструменты';showToast('На странице нет текстового слоя. Для перевода слов нажмите OCR скана.',5000);}
+      else elements.ocrStatus.textContent = `${pageWordBoxes.length} распознанных слов · нажмите на слово`;
+    } catch (error) {
+      if (renderToken !== activePageRender || error?.name === 'RenderingCancelledException') return;
+      console.warn('Text extraction failed for page', error);
+      currentPageText = '';
+      pageWordBoxes = []; readingLines=[];readingTokens=[];pageHasText=false;
+      pageTextOffsets = [];
+      elements.textLayer.replaceChildren();
+      showToast('Страница открыта, но выделение текста недоступно.', 5000);
+    }
+    elements.pageCounter.textContent = `${currentPage} / ${pdfDoc.numPages}`;
+    $('pageJump').disabled=false; $('pageJump').max=String(pdfDoc.numPages); $('pageJump').value=String(currentPage);
+    $('pageCountLabel').textContent='/ '+pdfDoc.numPages;
+    elements.zoomValue.textContent = `${Math.round(zoom*100)}%`;
+    elements.prevPage.disabled = currentPage <= 1; elements.nextPage.disabled = currentPage >= pdfDoc.numPages;
+    elements.pageInfo.textContent = `Страница ${currentPage} из ${pdfDoc.numPages}`;
+    $('columnJump').classList.toggle('hidden',!(window.innerWidth<=760 && viewport.width>elements.viewport.clientWidth+60));
+    elements.viewport.scrollTop = 0; elements.viewport.scrollLeft = 0;
+    readerReady = true;
+  }
+
+  // Context is taken only from the actual PDF page. For two-column pages we
+  // reconstruct reading lines per column, not from PDF.js's arbitrary item order.
+  // This prevents an example from combining the left and right columns.
+  function sentenceFor(term, locatedAt = -1) {
+    const text = currentPageText || '';
+    const idx = locatedAt >= 0 ? locatedAt : text.toLowerCase().indexOf(term.toLowerCase());
+    if (idx < 0) return '';
+    const left = text.slice(0, idx);
+    const start = Math.max(left.lastIndexOf('. '), left.lastIndexOf('! '), left.lastIndexOf('? ')) + 2;
+    let right = text.length;
+    for (const mark of ['. ', '! ', '? ']) {
+      const j = text.indexOf(mark, idx + term.length);
+      if (j >= 0) right = Math.min(right, j + 1);
+    }
+    let result = text.slice(Math.max(0,start),right).replace(/\s+/g,' ').trim();
+    // Rather than show unrelated words, leave example empty when sentence cannot
+    // be bounded reliably. All generated examples must remain editable.
+    return result.length >= 10 && result.length <= 450 ? result : '';
+  }
+
+  function median(nums) {
+    const sorted=nums.filter(Number.isFinite).sort((a,b)=>a-b);
+    return sorted.length?sorted[Math.floor(sorted.length/2)]:12;
+  }
+  function groupIntoLines(boxes, tolerance) {
+    const lines=[];
+    for(const word of [...boxes].sort((a,b)=>a.y-b.y||a.x-b.x)) {
+      let best=null, distance=Infinity;
+      for(const line of lines) {
+        const d=Math.abs(line.y-word.y);
+        if(d<=tolerance && d<distance) {best=line;distance=d;}
+      }
+      if(!best){best={y:word.y, words:[]};lines.push(best);}
+      best.words.push(word);
+      best.y=best.words.reduce((acc,w)=>acc+w.y,0)/best.words.length;
+    }
+    for(const line of lines)line.words.sort((a,b)=>a.x-b.x);
+    return lines.sort((a,b)=>a.y-b.y);
+  }
+  function buildReadingLines(boxes, pageWidth) {
+    if (!boxes.length) {readingTokens=[];return [];}
+    const h=median(boxes.map(w=>w.h));
+    const globalLines=groupIntoLines(boxes,Math.max(2.5,h*.42));
+    // Find recurring vertical whitespace gutters, not a hardcoded 50/50
+    // division. The sample paper has a 200px gutter on its abstract and a
+    // different center gutter in the two-column body.
+    const gaps=[];
+    for(const line of globalLines)for(let i=1;i<line.words.length;i++){
+      const prev=line.words[i-1],next=line.words[i];
+      const gap=next.x-(prev.x+prev.w),x=prev.x+prev.w+gap/2;
+      if(gap>=Math.max(13,h*1.25)&&gap<pageWidth*.46&&x>pageWidth*.18&&x<pageWidth*.82)
+        gaps.push({gap,x,y:line.y});
+    }
+    const seams=gaps.filter(g=>gaps.filter(b=>Math.abs(b.x-g.x)<18 && Math.abs(b.y-g.y)<220).length>=3);
+    const segments=[];
+    for(const line of globalLines){
+      let current=[];
+      const flush=()=>{if(current.length){segments.push({y:median(current.map(w=>w.y)),words:current,left:current[0].x,right:current.at(-1).x+current.at(-1).w});current=[];}};
+      for(const word of line.words){
+        const prev=current.at(-1);
+        if(prev){const gap=word.x-(prev.x+prev.w),cut=prev.x+prev.w+gap/2;
+          // Even if a two-column gutter occurs in only one or two lines,
+          // do not concatenate text across a strong central whitespace band.
+          const strongCentralGutter=gap>=Math.max(32,h*2.7)&&cut>=pageWidth*.25&&cut<=pageWidth*.75;
+          if(strongCentralGutter || (gap>=Math.max(13,h*1.25) && seams.some(g=>Math.abs(g.x-cut)<18&&Math.abs(g.y-line.y)<220)))flush();
+        }
+        current.push(word);
+      }
+      flush();
+    }
+    // Group successive line segments by their left margin and vertical
+    // continuity. Thus a full-width abstract is not split in half.
+    const groups=[];
+    for(const segment of segments.sort((a,b)=>a.y-b.y||a.left-b.left)) {
+      let best=null, score=Infinity;
+      for(const group of groups) {
+        const last=group.at(-1);
+        const dy=segment.y-last.y,dx=Math.abs(segment.left-last.left);
+        if(dy<=0||dy>Math.max(38,h*4.2)||dx>Math.max(23,h*2.8))continue;
+        // Avoid bridging into a neighboring column even if it is offset.
+        if(segment.right<last.left+10 || segment.left>last.right+25)continue;
+        const rank=dx+dy*.15;
+        if(rank<score){score=rank;best=group;}
+      }
+      if(best)best.push(segment);else groups.push([segment]);
+    }
+    const lines=[];
+    readingTokens=[];
+    for(let groupId=0;groupId<groups.length;groupId++){
+      for(const segment of groups[groupId].sort((a,b)=>a.y-b.y)){
+        segment.column=groupId;segment.id=lines.length;
+        segment.h=median(segment.words.map(w=>w.h));
+        for(const word of segment.words){word.column=groupId;word.lineId=segment.id;word.readingIndex=readingTokens.length;readingTokens.push(word);}
+        lines.push(segment);
+      }
+    }
+    return lines;
+  }
+  function wordText(w) {
+    const after=String(w.tail||'').match(/^[^\p{L}\p{N}]*?[.,;:!?)]/u);
+    return w.word + (after?after[0].trim():'');
+  }
+  function isSentenceEnd(w) { return /[.!?]/.test(String(w.tail||'')); }
+  function boundaryBetween(a,b) {
+    if(!a||!b||a.column!==b.column)return true;
+    if(a.lineId===b.lineId)return false;
+    const l1=readingLines[a.lineId], l2=readingLines[b.lineId];
+    if(!l1||!l2)return true;
+    const dy=l2.y-l1.y;
+    const lineHeight=Math.max(l1.h,l2.h);
+    // Figure captions, equations and separated paragraphs must not bleed into
+    // examples from adjacent regions of the page.
+    // A heading, table caption or paragraph starts a new context. Avoid
+    // mixing large title text into a scientific example.
+    if (Math.abs(l1.h-l2.h) > Math.max(3.2, lineHeight*.24)) return true;
+    if(dy<0||dy>lineHeight*1.55)return true;
+    return false;
+  }
+  function exampleFromWord(box) {
+    if(!box||!Number.isInteger(box.readingIndex))return '';
+    const words=readingTokens;
+    let left=box.readingIndex,right=left;
+    let n=0;
+    while(left>0 && n<65){
+      const prev=words[left-1],curr=words[left];
+      if(boundaryBetween(prev,curr)||isSentenceEnd(prev))break;
+      left--;n++;
+    }
+    n=0;
+    while(right+1<words.length && n<65){
+      if(isSentenceEnd(words[right])||boundaryBetween(words[right],words[right+1]))break;
+      right++;n++;
+    }
+    const sentence=words.slice(left,right+1).map(wordText).join(' ')
+      .replace(/-\s+(?=[a-z])/g,'') // PDF end-of-line hyphenation
+      .replace(/\s+([,.;:!?])/g,'$1')
+      .replace(/\s+/g,' ').trim()
+      // A neighboring section heading may share a baseline group in complex PDFs.
+      // Do not present "Introduction The ..." as if it were one sentence.
+      .replace(/^(?:\d+(?:\.\d+)*\.?\s+)?(?:Introduction|Abstract|Experimental framework|Methods|Materials and Methods|Results(?: and Discussion)?|Conclusions?|Numerical modeling|Mathematical modeling|State of the art)\s+(?=[A-Z])/i,'');
+    if(!sentence)return '';
+    const hasStart=left===0 || boundaryBetween(words[left-1],words[left]) || isSentenceEnd(words[left-1]);
+    const hasEnd=right===words.length-1 || boundaryBetween(words[right],words[right+1]) || isSentenceEnd(words[right]);
+    const safe=(hasStart?'':'… ')+sentence+(isSentenceEnd(words[right])?'':' …');
+    if(safe.length<=480)return safe;
+    const a=Math.max(left,box.readingIndex-16),b=Math.min(right,box.readingIndex+18);
+    return (a>left?'… ':'')+words.slice(a,b+1).map(wordText).join(' ').replace(/\s+([,.;:!?])/g,'$1')+(b<right?' …':'');
+  }
+  function phraseSuggestions(box) {
+    if(!box||!Number.isInteger(box.readingIndex))return [];
+    const idx=box.readingIndex, selected=[];
+    for(let n=2;n<=4;n++)for(let offset=0;offset<n;offset++){
+      const start=idx-offset,part=readingTokens.slice(start,start+n);
+      if(start<0||part.length!==n||!part.includes(box))continue;
+      if(part.some((w,i)=>i>0 && (w.lineId!==part[i-1].lineId || w.column!==box.column ||
+        w.x-(part[i-1].x+part[i-1].w)>Math.max(18,w.h*1.8))))continue;
+      const phrase=part.map(w=>w.word).join(' ');
+      if(findTranslation(phrase) && !selected.some(s=>normalizeTerm(s)===normalizeTerm(phrase)))selected.push(phrase);
+    }
+    return selected.sort((a,b)=>b.length-a.length).slice(0,3);
+  }
+
+  // Each PDF.js text item has a transformation in the unscaled PDF page.
+  // Transform it with page viewport's matrix so hit rectangles match the canvas.
+  function layoutWordBoxes(textContent, viewport) {
+    const boxes = [];
+    const pattern = /(?:[\p{L}][\p{L}\p{M}'’\-]*|[0-9]+(?:[.,][0-9]+)?)/gu;
+    const words = textContent.items || [];
+    for (let index=0; index<words.length; index++) {
+      const item = words[index];
+      if (!item.str || !item.transform || !(item.width>0)) continue;
+      const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
+      const fontHeight = Math.hypot(tx[2], tx[3]);
+      if (!fontHeight || !Number.isFinite(fontHeight)) continue;
+      const angle = Math.atan2(tx[1],tx[0]);
+      if (Math.abs(angle)>0.12) continue; // vertical/rotated captions are not covered yet
+      const fontStyle = textContent.styles?.[item.fontName] || {};
+      const ascent = Number.isFinite(fontStyle.ascent) ? fontStyle.ascent : 0.85;
+      const top = tx[5] - Math.max(0.65,Math.min(1.1,ascent)) * fontHeight;
+      const fullWidth = item.width * viewport.scale;
+      const fontFamily = fontStyle.fontFamily || 'serif';
+      textCanvasCtx.font = `${fontHeight}px ${fontFamily}`;
+      const str = item.str;
+      const measured = Math.max(0.001, textCanvasCtx.measureText(str).width);
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(str))) {
+        const leftRatio = textCanvasCtx.measureText(str.slice(0,match.index)).width / measured;
+        const rightRatio = textCanvasCtx.measureText(str.slice(0,match.index+match[0].length)).width / measured;
+        const x=tx[4]+fullWidth*leftRatio;
+        const w=fullWidth*(rightRatio-leftRatio);
+        if (w < 1 || !Number.isFinite(x)) continue;
+        boxes.push({
+          word:match[0], x, y:top-1, w, h:fontHeight*1.15+2,
+          index, selectable:/^[A-Za-z]/.test(match[0]), charAt:(pageTextOffsets[index]||0)+match.index,
+          tail: (()=>{const k=pattern.lastIndex;const n=pattern.exec(str);pattern.lastIndex=k;
+            return str.slice(match.index+match[0].length,n?n.index:str.length);})(),
+        });
+      }
+    }
+    return boxes;
+  }
+
+  function wordAtPagePoint(x,y) {
+    // Slight tolerance for imperfect font metrics and finger-sized taps.
+    let best=null, score=Infinity;
+    for (const box of pageWordBoxes) {
+      if(box.selectable===false)continue;
+      const padX=Math.min(3,box.w*0.1), padY=Math.min(3,box.h*0.15);
+      if(x < box.x-padX || x > box.x+box.w+padX || y < box.y-padY || y > box.y+box.h+padY) continue;
+      const dx=Math.abs(x-(box.x+box.w/2))/Math.max(1,box.w);
+      const dy=Math.abs(y-(box.y+box.h/2))/Math.max(1,box.h);
+      const inside = x >= box.x && x <= box.x+box.w && y >= box.y && y <= box.y+box.h;
+      const candidate=dx+dy+(inside?0:0.48);
+      if(candidate < score){score=candidate;best=box;}
+    }
+    return best;
+  }
+
+
+  // Exact whole-term verification: "area" must not match "areas".
+  function termMatch(example, term) {
+    const words=normalizeTerm(term).split(' ').filter(Boolean).map(x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
+    if(!words.length||!String(example||'').trim())return null;
+    const re=new RegExp('(^|[^\\p{L}\\p{M}])('+words.join('\\s+')+')(?![\\p{L}\\p{M}])','iu');
+    const m=re.exec(example);
+    return m?{index:m.index+m[1].length,length:m[2].length}:null;
+  }
+
+  function normalizeTerm(term) { return term.toLowerCase().replace(/[“”".,;:!?()[\]{}]/g,'').replace(/\s+/g,' ').trim(); }
+  function findTranslation(term) {
+    const key = normalizeTerm(term);
+    // Engineering phrases take precedence over general language.
+    if (dictionary.has(key)) return dictionary.get(key);
+    if (key.includes(' ')) {
+      const variants=[key.replace(/ies$/,'y'),key.replace(/s$/,'')];
+      for(const variant of variants)if(dictionary.has(variant))return dictionary.get(variant);
+      return '';
+    }
+    const irregular = {
+      'are':'be','is':'be','was':'be','were':'be','been':'be','has':'have','had':'have',
+      'does':'do','did':'do','done':'do','made':'make','found':'find','shown':'show',
+      'known':'know','gave':'give','given':'give','took':'take','taken':'take',
+      'obtained':'obtain','led':'lead','went':'go','went':'go','brought':'bring',
+      'increased':'increase','decreased':'decrease','largest':'large','smaller':'small',
+      'greater':'great','less':'little','better':'good','worse':'bad','further':'far'
+    };
+    if (irregular[key] && dictionary.has(irregular[key])) return dictionary.get(irregular[key]);
+    const variants = new Set([key]);
+    if (key.endsWith('ies') && key.length>4) variants.add(key.slice(0,-3)+'y');
+    if (key.endsWith('es') && key.length>3) variants.add(key.slice(0,-2));
+    if (key.endsWith('s') && key.length>3) variants.add(key.slice(0,-1));
+    if (key.endsWith('ing') && key.length>5) {
+      const stem=key.slice(0,-3); variants.add(stem); variants.add(stem+'e');
+      if(stem.length>2 && stem.at(-1)===stem.at(-2)) variants.add(stem.slice(0,-1));
+    }
+    if (key.endsWith('ied') && key.length>4)variants.add(key.slice(0,-3)+'y');
+    if (key.endsWith('ed') && key.length>4) {
+      const stem=key.slice(0,-2);variants.add(stem);variants.add(stem+'e');
+      if(stem.length>2 && stem.at(-1)===stem.at(-2)) variants.add(stem.slice(0,-1));
+    }
+    for (const word of variants) if (dictionary.has(word)) return dictionary.get(word);
+    return '';
+  }
+  function findSelectedTerm() {
+    const selection=window.getSelection();
+    if(!selection || selection.isCollapsed || selection.rangeCount===0) return '';
+    if(!elements.textLayer.contains(selection.anchorNode) && !elements.textLayer.contains(selection.focusNode)) return '';
+    const selected=selection.toString().trim();
+    return selected.length>1 && selected.length<=90 ? selected : '';
+  }
+  function highlightWords(words) {
+    elements.highlights.replaceChildren();
+    for(const b of words){const hl=document.createElement('div');hl.className='word-highlight';
+      Object.assign(hl.style,{left:b.x+'px',top:b.y+'px',width:b.w+'px',height:b.h+'px'});
+      elements.highlights.append(hl);
+    }
+  }
+  function linePhrase(start,end) {
+    // Prevent crossing from one column to another or from one line to another.
+    const a=pageWordBoxes.indexOf(start),b=pageWordBoxes.indexOf(end);
+    if(a<0 || b<0)return [end];
+    const sameLine=pageWordBoxes.filter(w=>Math.abs(w.y-start.y)<Math.max(6,start.h*.65));
+    const left=Math.min(start.x,end.x), right=Math.max(start.x+start.w,end.x+end.w);
+    const items=sameLine.filter(w=>w.x+w.w>left-3 && w.x<right+3).sort((w1,w2)=>w1.x-w2.x);
+    if(items.length>12 || items.length===0 || Math.abs(start.y-end.y)>Math.max(6,start.h*.65))return [end];
+    // Do not combine words from different columns across a large blank gap.
+    if(items.some((w,i)=>i>0 && w.x - (items[i-1].x+items[i-1].w)>Math.max(16,start.h*1.7)))return [end];
+    return items;
+  }
+  function clickWord(word) {
+    if (phraseMode) {
+      if (!phraseStart) {phraseStart=word;highlightWords([word]);elements.ocrStatus.textContent='Нажмите последнее слово словосочетания';return;}
+      const words=linePhrase(phraseStart,word);
+      phraseMode=false;phraseStart=null;elements.phraseButton.classList.remove('btn-primary');
+      elements.phraseButton.setAttribute('aria-pressed','false');
+      highlightWords(words);openTerm(words.map(w=>w.word).join(' '),{box:words[0],phrase:true});return;
+    }
+    // A tap always means exactly the tapped word; phrases are an explicit mode.
+    highlightWords([word]);openTerm(word.word,{box:word});
+  }
+  function openTerm(term, occurrence = -1, existing=null) {
+    const cleaned = term.trim().replace(/\s+/g,' ');
+    if (!cleaned || cleaned.length > 90) return;
+    pendingTerm = cleaned;
+    pendingEditId = existing?.id || null;
+    pendingSource = existing ? {name:existing.sourceName,id:existing.sourceId,page:existing.page} : {name:currentDoc?.name||'',id:currentDoc?.id||'',page:currentPage};
+    const translation = existing?.translation ?? findTranslation(cleaned);
+    currentSelectedBox=existing?null:(occurrence && typeof occurrence==='object'?occurrence.box:null);
+    elements.modalTerm.textContent = cleaned;
+    elements.translationInput.value = translation;
+    elements.exampleInput.value = existing?.example ?? (currentSelectedBox?exampleFromWord(currentSelectedBox):sentenceFor(cleaned,typeof occurrence==='number'?occurrence:-1));
+    $('reviewedCheckbox').checked = Boolean(existing?.reviewed);
+    updateExamplePreview();
+    elements.sourceInfo.textContent = `Источник: ${pendingSource.name || '—'}`;
+    elements.pageSource.textContent = `Страница ${pendingSource.page || '—'}`;
+    elements.dictionaryStatus.textContent = existing ? 'Сохранённая запись. Изменения сохранятся в глоссарии.' : (translation ? '✓ Найдено в локальном словаре. Проверьте значение по контексту.' : 'Нет в локальном словаре — введите свой перевод. Приложение не придумывает значения.');
+    elements.dictionaryStatus.classList.toggle('no-translation',!translation&&!existing);
+    editingTranslationByUser=Boolean(existing);
+    editingExampleTranslationByUser=Boolean(existing);
+    latestSuggestion=null;
+    $('translationOptions').replaceChildren();
+    if(translation&&!existing)addTranslationOption('Локально',translation);
+    $('exampleTranslationInput').value=existing?.exampleTranslation||'';
+    $('exampleTranslationStatus').textContent='Английский пример — из открытой статьи; онлайн-перевод предложения запускается только кнопкой.';
+    if(onlineAbort)onlineAbort.abort();if(exampleAbort)exampleAbort.abort();
+    const serial=++onlineRequestSerial;
+    const suggestions=$('phraseSuggestions');
+    suggestions.replaceChildren();
+    if(!existing && currentSelectedBox && !occurrence.phrase)for(const phrase of phraseSuggestions(currentSelectedBox)) {
+      const b=document.createElement('button');b.type='button';b.className='phrase-chip';b.textContent=phrase;
+      b.addEventListener('click',()=>{pendingTerm=phrase;elements.modalTerm.textContent=phrase;elements.translationInput.value=findTranslation(phrase);updateExamplePreview();
+        elements.dictionaryStatus.textContent='✓ Перевод словосочетания из локального словаря.';elements.dictionaryStatus.classList.remove('no-translation');suggestions.replaceChildren();
+        if(onlineAbort)onlineAbort.abort();editingTranslationByUser=false;$('translationOptions').replaceChildren();
+        addTranslationOption('Локально',findTranslation(phrase));
+        translateSelectedTerm(phrase,findTranslation(phrase),++onlineRequestSerial);});
+      suggestions.append(b);
+    }
+    $('exampleQuality').textContent=existing?'Сохранённый пример':(currentSelectedBox?(currentSelectedBox.ocr?'OCR · проверьте распознавание':'Предложение из текущей колонки PDF'):'Добавьте пример вручную');
+    lastModalFocus = document.activeElement;
+    elements.modal.classList.remove('hidden');
+    if(!existing)translateSelectedTerm(cleaned,translation,serial);
+    setTimeout(() => { elements.translationInput.focus({preventScroll:true}); elements.modal.querySelector('.modal-card').scrollTop=0; }, 60);
+  }
+  // Preview contains only text copied from the article or typed by the user.
+  // Never fabricate an example or silently imply dictionary/AI verification.
+  function updateExamplePreview() {
+    const root=$('examplePreview'); root.replaceChildren();
+    const example=elements.exampleInput.value.trim();
+    if(!example){root.textContent='Пример отсутствует. Для зачёта добавьте предложение из статьи.';root.classList.add('missing-example');return;}
+    root.classList.remove('missing-example');
+    const match=termMatch(example,pendingTerm);
+    if(!match){root.textContent='Проверьте пример: выбранный термин не найден как отдельное слово или выражение. '+example;return;}
+    root.append(document.createTextNode(example.slice(0,match.index)));
+    const mark=document.createElement('mark');mark.textContent=example.slice(match.index,match.index+match.length);root.append(mark);
+    root.append(document.createTextNode(example.slice(match.index+match.length)));
+  }
+  elements.exampleInput.addEventListener('input',()=>{$('reviewedCheckbox').checked=false;updateExamplePreview();});
+
+  function closeTerm() {++onlineRequestSerial;if(onlineAbort)onlineAbort.abort();if(exampleAbort)exampleAbort.abort();
+    elements.modal.classList.add('hidden'); pendingTerm = '';pendingEditId=null;pendingSource=null;currentSelectedBox=null;
+    if (lastModalFocus?.focus) lastModalFocus.focus({preventScroll:true});lastModalFocus=null;
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key==='Escape' && !elements.modal.classList.contains('hidden')) {closeTerm();return;}
+    if (!elements.modal.classList.contains('hidden')) {
+      if (e.key==='Tab') {
+        const all=[...elements.modal.querySelectorAll('button:not(:disabled),textarea:not(:disabled),input:not(:disabled)')];
+        const first=all[0],last=all.at(-1);
+        if(e.shiftKey && document.activeElement===first){e.preventDefault();last.focus();}
+        else if(!e.shiftKey && document.activeElement===last){e.preventDefault();first.focus();}
+      }
+      return;
+    }
+    const tag=document.activeElement?.tagName;
+    if(['INPUT','TEXTAREA','SELECT'].includes(tag)||document.activeElement?.isContentEditable) return;
+    if (e.key==='ArrowRight' && pdfDoc && currentPage < pdfDoc.numPages){currentPage++;renderPage();}
+    if (e.key==='ArrowLeft' && pdfDoc && currentPage > 1){currentPage--;renderPage();}
+  });
+
+  async function saveTerm() {
+    const translation = elements.translationInput.value.trim();
+    const example = elements.exampleInput.value.trim();
+    const exampleTranslation = $('exampleTranslationInput').value.trim();
+    if (!pendingTerm) return;
+    if (!translation) { showToast('Добавьте перевод перед сохранением.'); return; }
+    if($('reviewedCheckbox').checked && (!example || !termMatch(example,pendingTerm))) {
+      showToast('Для отметки «Проверено» нужен пример из статьи с выбранным термином. Снимите отметку или исправьте пример.',8500);elements.exampleInput.focus();return;
+    }
+    const entries = await dbAll('entries');
+    const src=pendingSource||{name:'',id:'',page:0};
+    const duplicate = entries.find(e=>e.id===pendingEditId || (normalizeTerm(e.term)===normalizeTerm(pendingTerm) && e.sourceId===src.id));
+    const entry = {id:duplicate?.id||makeId(),term:pendingTerm,translation,example,exampleTranslation,sourceName:src.name||'',sourceId:src.id||'',page:src.page||0,reviewed:$('reviewedCheckbox').checked,createdAt:duplicate?.createdAt||Date.now()};
+    // Remember user-provided meanings locally for future lookups.
+    dictionary.set(normalizeTerm(pendingTerm),translation);
+    await dbPut('entries', entry);
+    closeTerm(); await refreshGlossary(); showToast(duplicate ? 'Запись обновлена.' : 'Термин добавлен в глоссарий.');
+  }
+  async function refreshGlossary() {
+    const entries = await dbAll('entries');
+    elements.entryCount.textContent = entries.length;
+    const checked=entries.filter(e=>Boolean(e.reviewed)).length;
+    const examples=entries.filter(e=>Boolean(String(e.example||'').trim())).length;
+    $('glossaryQuality').textContent=entries.length
+      ?`Проверено ${checked}/${entries.length} · с примером ${examples}/${entries.length}`
+      :'Проверено 0/0 · с примером 0/0';
+    $('glossaryQuality').setAttribute('aria-label',`Проверено переводов: ${checked} из ${entries.length}; записей с примером: ${examples}`);
+    const query = elements.glossarySearch.value.trim().toLowerCase();
+    const filter=$('glossaryFilter').value;
+    const quality=$('qualityFilter').value;
+    const passesQuality=e=>quality==='all'||
+      (quality==='pending'&&!e.reviewed)||
+      (quality==='noexample'&&!String(e.example||'').trim())||
+      (quality==='reviewed'&&Boolean(e.reviewed));
+    const filtered = entries.filter(e=>passesQuality(e) && (filter!=='current'||(currentDoc&&e.sourceId===currentDoc.id)) && `${e.term} ${e.translation} ${e.example} ${e.exampleTranslation||''} ${e.sourceName}`.toLowerCase().includes(query)).sort((a,b) => b.createdAt-a.createdAt);
+    elements.glossaryList.replaceChildren();
+    if (!filtered.length) { const empty = document.createElement('div'); empty.className='empty-small'; empty.textContent = entries.length ? 'Ничего не найдено.' : 'Здесь появятся ваши слова.'; elements.glossaryList.append(empty); return; }
+    for (const entry of filtered) {
+      const row = document.createElement('div'); row.className='glossary-item';
+      const body=document.createElement('div'); body.style.minWidth='0';
+      const term=document.createElement('strong'); term.textContent=entry.term;
+      const trans=document.createElement('p'); trans.textContent=entry.translation;
+      const meta=document.createElement('small'); meta.textContent=`${entry.sourceName || 'Без источника'} · стр. ${entry.page || '—'}`;
+      body.append(term,trans,meta);
+      if(entry.reviewed){const checked=document.createElement('span');checked.className='reviewed-badge';checked.textContent='✓ Проверено';body.append(checked);}
+      row.addEventListener('click',()=>openTerm(entry.term,-1,entry));
+      const link=document.createElement('button');link.type='button';link.className='entry-source-btn';
+      link.textContent='Открыть стр. '+(entry.page||'—');link.title='Перейти к PDF источника';
+      link.setAttribute('aria-label','Открыть страницу источника для '+entry.term);
+      link.addEventListener('click',async event=>{event.stopPropagation();
+        if(!entry.sourceId){showToast('Для записи не указан источник.');return;}
+        const target=await dbGet('documents',entry.sourceId);
+        if(!target){showToast('PDF отсутствует в этой библиотеке. Загрузите документ повторно.');return;}
+        if(await openDocument(target.id)){currentPage=Math.max(1,Math.min(Number(entry.page)||1,pdfDoc.numPages));await renderPage();switchMobileView('read');}
+      });body.append(link);
+      const del=document.createElement('button'); del.className='delete-entry'; del.textContent='×'; del.title='Удалить'; del.addEventListener('click',async(event)=>{event.stopPropagation();if(!confirm('Удалить термин из глоссария?'))return;await dbDelete('entries',entry.id);refreshGlossary();showToast('Запись удалена.');});
+      row.append(body,del); elements.glossaryList.append(row);
+    }
+  }
+  async function exportEntries() {
+    const filter=$('glossaryFilter').value;
+    const verifiedOnly=Boolean($('exportVerifiedOnly')?.checked);
+    const entries = (await dbAll('entries')).filter(e=>(filter!=='current'||(currentDoc&&e.sourceId===currentDoc.id))&&(!verifiedOnly||Boolean(e.reviewed))).sort((a,b)=>a.term.localeCompare(b.term,'en'));
+    if (!entries.length) { showToast(verifiedOnly?'Нет проверенных записей для экспорта.':'Глоссарий пока пуст.');return null; }
+    return entries;
+  }
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1500);
+  }
+  async function exportCsv() {
+    const entries=await exportEntries(); if(!entries)return;
+    const rows=[['№','English term','Перевод','Example of usage','Перевод примера','Источник','Страница'],...entries.map((e,i)=>[i+1,e.term,e.translation,e.example,e.exampleTranslation||'',e.sourceName,e.page])];
+    const csv='\uFEFF'+rows.map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\r\n');
+    downloadBlob(new Blob([csv],{type:'text/csv;charset=utf-8'}),'ScientificGlossary.csv'); showToast('CSV-файл подготовлен.');
+  }
+  function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  async function exportWord() {
+    const entries=await exportEntries(); if(!entries)return;
+    try {
+      const blob=window.SGDocx.build(entries);
+      downloadBlob(blob,'ScientificGlossary.docx');
+      showToast('Настоящий DOCX подготовлен.');
+    } catch(e){console.error('DOCX failed',e);showToast('Ошибка создания DOCX: '+e.message);}
+  }
+  async function printGlossary() {
+    const entries=await exportEntries(); if(!entries)return;
+    const area=$('printArea'); area.innerHTML=`<h1>Англо-русский глоссарий</h1><div class="print-meta">Научная литература · ${new Date().toLocaleDateString('ru-RU')} · терминов: ${entries.length}</div><table><thead><tr><th>№</th><th>English term</th><th>Перевод</th><th>Example of usage</th><th>Источник / страница</th></tr></thead><tbody>${entries.map((e,i)=>`<tr><td>${i+1}</td><td>${esc(e.term)}</td><td>${esc(e.translation)}</td><td>${esc(e.example)}${e.exampleTranslation?'<br><small>'+esc(e.exampleTranslation)+'</small>':''}</td><td>${esc(e.sourceName)} / ${esc(e.page)}</td></tr>`).join('')}</tbody></table>`;
+    window.print();
+  }
+
+  async function backupGlossary(){
+    const entries=await dbAll('entries');
+    const json=JSON.stringify({format:'scientific-glossary-backup',version:1,exportedAt:new Date().toISOString(),entries},null,2);
+    downloadBlob(new Blob([json],{type:'application/json;charset=utf-8'}),'ScientificGlossary-backup.json');
+    showToast('Слова сохранены. Внимание: PDF в резервную копию не входят.',6500);
+  }
+  async function restoreGlossary(file){
+    if(!file)return;
+    try{
+      if(file.size>10*1024*1024)throw new Error('Файл копии слишком велик.');
+      const data=JSON.parse(await file.text());
+      if(data.format!=='scientific-glossary-backup'||!Array.isArray(data.entries))throw new Error('Неверный формат резервной копии.');
+      if(!confirm('Восстановить '+data.entries.length+' записей? Существующие записи останутся.'))return;
+      let count=0;
+      for(const row of data.entries.slice(0,10000)){
+        if(typeof row.term!=='string'||typeof row.translation!=='string'||!row.term.trim()||!row.translation.trim())continue;
+        const entry={id:typeof row.id==='string'?row.id:makeId(),term:row.term.slice(0,180),translation:row.translation.slice(0,1500),example:String(row.example||'').slice(0,3000),exampleTranslation:String(row.exampleTranslation||'').slice(0,3000),sourceName:String(row.sourceName||''),sourceId:String(row.sourceId||''),page:Number(row.page)||0,reviewed:Boolean(row.reviewed),createdAt:Number(row.createdAt)||Date.now()};
+        await dbPut('entries',entry);count++;
+      }
+      await refreshGlossary();showToast('Восстановлено записей: '+count);
+    }catch(e){console.warn(e);showToast('Не удалось восстановить копию: '+e.message,7000);}
+  }
+  async function importDictionary(file) {
+    if(!file)return;
+    try {
+      if(file.size>20*1024*1024)throw new Error('Файл слишком большой (до 20 МБ).');
+      const text=await file.text();
+      const rows=[];
+      for(const line of text.split(/\r?\n/)){
+        if(!line.trim()||line.startsWith('#'))continue;
+        const pos=line.indexOf('\t');if(pos<1)continue;
+        const term=line.slice(0,pos).trim().toLowerCase(), translation=line.slice(pos+1).trim();
+        if(!term||!translation||term.length>110||translation.length>700)continue;
+        if(!/^[a-z][a-z '\-]+$/i.test(term))continue;
+        rows.push({term,translation});
+        if(rows.length>100000)throw new Error('Слишком много записей (до 100 000).');
+      }
+      if(!rows.length)throw new Error('Не найдены строки вида «word<TAB>перевод».');
+      await new Promise((resolve,reject)=>{
+        const tx=db.transaction('customDictionary','readwrite');
+        const store=tx.objectStore('customDictionary');
+        tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);
+        for(const row of rows)store.put(row);
+      });
+      rows.forEach(row=>dictionary.set(row.term,row.translation));
+      $('dictInfo').textContent=`Импортировано ${rows.length} значений. Всего в памяти ${dictionary.size} терминов.`;
+      showToast(`Словарь дополнен: ${rows.length} терминов. Переводы доступны без интернета.`,6000);
+    } catch(e){console.warn(e);showToast('Не удалось импортировать словарь: '+e.message,8500);}
+    finally{$('dictionaryInput').value='';}
+  }
+  $('dictionaryInput').addEventListener('change',e=>importDictionary(e.target.files?.[0]));
+
+  function addScript(src){
+    return new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=src;script.onload=resolve;script.onerror=()=>reject(new Error('Не удалось загрузить OCR-модуль'));document.head.append(script);});
+  }
+  function collectOcrWords(data){
+    if(Array.isArray(data.words)&&data.words.length)return data.words;
+    const all=[];
+    function walk(node){if(!node)return; if(Array.isArray(node))return node.forEach(walk);
+      if(node.bbox && node.text && !node.paragraphs && !node.lines && !node.words)all.push(node);
+      for(const k of ['blocks','paragraphs','lines','words'])if(node[k])walk(node[k]);
+    }
+    walk(data.blocks); return all;
+  }
+  async function recognizeCurrentPage(){
+    if(!pdfDoc){showToast('Сначала откройте PDF.');return;}
+    const ocrBtn=$('ocrBtn');ocrBtn.disabled=true;
+    try{
+      elements.ocrStatus.textContent='OCR: подготовка (первый запуск требует интернет)…';
+      if(ocrCache.has(currentDoc.id+':'+currentPage)){
+        const cached=ocrCache.get(currentDoc.id+':'+currentPage);
+        pageWordBoxes=cached.boxes;currentPageText=cached.text;
+        readingLines=buildReadingLines(pageWordBoxes,elements.canvas.clientWidth);pageHasText=true;
+        elements.ocrStatus.textContent=`OCR: ${pageWordBoxes.length} слов`;showToast('Результат OCR загружен из памяти.');return;
+      }
+      if(!window.Tesseract)await addScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js');
+      const c=elements.canvas;
+      elements.ocrStatus.textContent='OCR распознаёт страницу…';
+      const worker=await Tesseract.createWorker('eng',1,{
+        logger:msg=>{if(msg.progress!=null)elements.ocrStatus.textContent='OCR: '+Math.round(msg.progress*100)+'% · '+(msg.status||'');}
+      });
+      let data;
+      try{data=(await worker.recognize(c,{}, {text:true,blocks:true})).data;}
+      finally{await worker.terminate();}
+      const found=collectOcrWords(data),scaleX=c.clientWidth/c.width,scaleY=c.clientHeight/c.height;
+      const boxes=[];
+      for(const w of found){const r=w.bbox,text=(w.text||'').replace(/[.,:;!?]+$/,'').trim();
+        if(!r||!text||!/[A-Za-z]/.test(text))continue;
+        boxes.push({word:text.replace(/[.,:;!?]+$/,''),tail:(text.match(/[.,:;!?]+$/)||[])[0]||'',ocr:true,selectable:true,x:r.x0*scaleX,y:r.y0*scaleY,w:(r.x1-r.x0)*scaleX,h:(r.y1-r.y0)*scaleY,charAt:0});
+      }
+      boxes.sort((a,b)=>a.y-b.y||a.x-b.x);
+      if(!boxes.length)throw new Error('Слова не распознаны. Попробуйте увеличить страницу.');
+      pageWordBoxes=boxes;currentPageText=data.text||boxes.map(w=>w.word).join(' ');
+      readingLines=buildReadingLines(pageWordBoxes,c.clientWidth);pageHasText=true;
+      ocrCache.set(currentDoc.id+':'+currentPage,{boxes,text:currentPageText});
+      elements.ocrStatus.textContent=`OCR: ${boxes.length} слов · нажмите на слово`;
+      showToast('OCR завершён. Теперь нажимайте на слова скана.');
+    }catch(e){console.error('OCR failed',e);elements.ocrStatus.textContent='OCR недоступен · можно внести термин вручную';showToast('OCR: '+e.message+'. Для первого запуска нужно интернет-соединение.',8500);}
+    finally{ocrBtn.disabled=false;}
+  }
+
+  elements.pdfInput.addEventListener('change', async e=>{
+    const files=[...(e.target.files||[])];
+    if(!files.length)return;
+    elements.pdfInput.disabled=true;
+    try{
+      for(let i=0;i<files.length;i++){
+        if(files.length>1)elements.ocrStatus.textContent=`Импорт PDF: ${i+1} из ${files.length}…`;
+        await handlePdfUpload(files[i]);
+      }
+      if(files.length>1)showToast(`Импорт завершён: обработано ${files.length} PDF.`,5000);
+    }finally{elements.pdfInput.disabled=false;elements.pdfInput.value='';}
+  });
+  elements.prevPage.addEventListener('click',async()=>{if(currentPage>1){currentPage--;await renderPage();}});
+  elements.nextPage.addEventListener('click',async()=>{if(pdfDoc&&currentPage<pdfDoc.numPages){currentPage++;await renderPage();}});
+  elements.zoomIn.addEventListener('click',async()=>{zoom=Math.min(2.5,zoom+.15);await renderPage();});
+  elements.zoomOut.addEventListener('click',async()=>{zoom=Math.max(.55,zoom-.15);await renderPage();});
+  // Click positions are matched against PDF character geometry, not HTML overlays.
+  elements.pageContainer.addEventListener('click',e=>{
+    if(!pdfDoc||!readerReady)return;
+    const rect=elements.pageContainer.getBoundingClientRect();
+    const word=wordAtPagePoint(e.clientX-rect.left,e.clientY-rect.top);
+    if(word) clickWord(word);
+  });
+  $('moreReaderTools').addEventListener('click',()=>{const open=document.body.classList.toggle('reader-more-open');$('moreReaderTools').setAttribute('aria-expanded',String(open));$('moreReaderTools').textContent=open?'Скрыть инструменты':'Ещё инструменты';});
+  $('columnJump').addEventListener('click',()=>{
+    const view=elements.viewport, max=view.scrollWidth-view.clientWidth;
+    if(max<20)return;
+    view.scrollTo({left:view.scrollLeft<max/2?max:0,behavior:'smooth'});
+  });
+  elements.phraseButton.addEventListener('click',()=>{
+    if(!pdfDoc){showToast('Сначала откройте PDF.');return;}
+    phraseMode=!phraseMode;phraseStart=null;elements.highlights.replaceChildren();
+    elements.phraseButton.classList.toggle('btn-primary',phraseMode);
+    elements.phraseButton.setAttribute('aria-pressed',String(phraseMode));
+    elements.ocrStatus.textContent=phraseMode?'Нажмите первое слово выражения, затем последнее':'Нажмите на слово на странице';
+  });
+  $('manualTerm').addEventListener('click',()=>{
+    const word=prompt('Введите английское слово или выражение:');
+    if(word&&word.trim())openTerm(word.trim());
+  });
+  $('ocrBtn').addEventListener('click',recognizeCurrentPage);
+  $('glossaryFilter').addEventListener('change',refreshGlossary);
+  $('backupBtn').addEventListener('click',backupGlossary);
+  $('backupInput').addEventListener('change',async e=>{await restoreGlossary(e.target.files?.[0]);e.target.value='';});
+  $('closeModal').addEventListener('click',closeTerm); $('cancelTerm').addEventListener('click',closeTerm);
+  elements.modal.addEventListener('click',e=>{if(e.target.dataset.close)closeTerm();});
+  $('saveTerm').addEventListener('click',saveTerm);
+  elements.modal.addEventListener('keydown',e=>{
+    if((e.ctrlKey||e.metaKey)&&e.key==='Enter') {e.preventDefault();saveTerm();}
+  });
+  elements.glossarySearch.addEventListener('input',refreshGlossary);
+  $('qualityFilter').addEventListener('change',refreshGlossary);
+  $('exportCsvBtn').addEventListener('click',exportCsv); $('exportDocBtn').addEventListener('click',exportWord); $('printBtn').addEventListener('click',printGlossary);
+  $('clearSelection').addEventListener('click',()=>{window.getSelection()?.removeAllRanges();elements.highlights.replaceChildren();phraseStart=null;phraseMode=false;elements.phraseButton.classList.remove('btn-primary');});
+  $('installBtn').addEventListener('click',async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;$('installBtn').classList.add('hidden');});
+  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;$('installBtn').classList.remove('hidden');});
+  window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(pdfDoc)renderPage();},220);});
+
+  async function prepareServiceWorker() {
+    if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
+    try {
+      await navigator.serviceWorker.register('sw.js');
+      await navigator.serviceWorker.ready;
+      if (!navigator.serviceWorker.controller) {
+        await Promise.race([
+          new Promise(resolve => navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true })),
+          new Promise(resolve => setTimeout(resolve, 2500))
+        ]);
+      }
+    } catch (err) { console.warn('Service Worker registration failed', err); }
+  }
+  function loadPdfJs() {
+    if (window.pdfjsLib) return Promise.resolve();
+    return new Promise((resolve,reject)=>{
+      const sources=['https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+        'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js'];
+      function tryNext(i){
+        if(i>=sources.length){reject(new Error('PDF.js: оба источника недоступны'));return;}
+        const script=document.createElement('script');script.src=sources[i];
+        script.onload=()=>window.pdfjsLib?resolve():tryNext(i+1);
+        script.onerror=()=>tryNext(i+1);document.head.append(script);
+      }
+      tryNext(0);
+    });
+  }
+  async function init() {
+    await prepareServiceWorker();
+    try {
+      db=await openDb(); await loadDictionary();
+      for(const row of await dbAll('customDictionary')) if(row.term&&row.translation)dictionary.set(row.term,row.translation);
+      for(const e of await dbAll('entries')) if(e.term&&e.translation)dictionary.set(normalizeTerm(e.term),e.translation);
+      await refreshDocuments();await refreshGlossary();
+      $('readerHint').textContent='v1.8 · Офлайн использует словарь и ранее сохранённые переводы · Проверяйте примеры по статье';
+      if((await dbAll('documents')).length) switchMobileView('read');
+    } catch(error){console.error(error);showToast('Невозможно открыть локальное хранилище браузера.',7500);return;}
+    try {
+      await loadPdfJs();
+      pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    } catch(err){console.error(err);showToast('Не удалось загрузить PDF.js. Подключите интернет для первого запуска или повторите позже.',10000);}
+    if(!window.isSecureContext && location.protocol!=='file:')showToast('Для локального хранения и офлайн-кэша откройте приложение по HTTPS.');
+  }
+
+  init();
+})();
+
+</script>
 </body>
 </html>

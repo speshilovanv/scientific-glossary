@@ -1,0 +1,29 @@
+name: Validate ScientificGlossary
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  static-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Extract embedded JavaScript and check required UI
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          page=Path('index.html').read_text(encoding='utf-8')
+          for term in ('id="pageJump"', 'id="qualityFilter"', 'id="reviewedCheckbox"', 'id="exportDocBtn"', 'id="pdfInput"'):
+              assert term in page, f'Missing UI control: {term}'
+          scripts=re.findall(r'<script>\s*([\s\S]*?)</script>',page)
+          assert len(scripts)>=2, 'Expected embedded application and DOCX exporter'
+          for n, script in enumerate(scripts):
+              Path('/tmp/sg_script_'+str(n)+'.js').write_text(script)
+          print('Static UI checks passed; extracted',len(scripts),'scripts')
+          PY
+          for script in /tmp/sg_script_*.js; do node --check "$script"; done
+          node --check sw.js

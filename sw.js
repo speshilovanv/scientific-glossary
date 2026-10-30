@@ -1,53 +1,49 @@
-/* ScientificGlossary Web service worker v0.2 */
-const CACHE_NAME = 'scientific-glossary-shell-v2';
-const VENDOR_CACHE = 'scientific-glossary-vendor-v2';
-const APP_SHELL = ['./', './index.html', './styles.css', './app.js', './manifest.webmanifest',
-                   './assets/dictionary.tsv', './assets/icon.svg', './assets/icon-192.png', './assets/icon-512.png'];
+/* ScientificGlossary Reader 1.8 — offline application shell. */
+const SHELL_CACHE = 'scientific-glossary-shell-1.8.0';
+const VENDOR_CACHE = 'scientific-glossary-vendor-1.8.0';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './assets/icon.svg', './assets/icon-192.png', './assets/icon-512.png'];
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL))
-    .then(() => self.skipWaiting()));
+  event.waitUntil((async () => {
+    const cache = await caches.open(SHELL_CACHE);
+    await cache.addAll(SHELL);
+    await self.skipWaiting();
+  })());
 });
 self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(
-    keys.filter(k => ![CACHE_NAME, VENDOR_CACHE].includes(k)).map(k => caches.delete(k))
-  )).then(() => self.clients.claim()));
+  event.waitUntil((async () => {
+    for (const key of await caches.keys()) {
+      if (key.startsWith('scientific-glossary-') && key !== SHELL_CACHE && key !== VENDOR_CACHE) await caches.delete(key);
+    }
+    await self.clients.claim();
+  })());
 });
 self.addEventListener('fetch', event => {
-  const req = event.request;
-  if (req.method !== 'GET') return;
-  const url = new URL(req.url);
+  const request = event.request;
+  if (request.method !== 'GET') return;
+  const url = new URL(request.url);
   if (url.origin !== self.location.origin) {
-    if (req.destination === 'script' || req.destination === 'worker') {
-      event.respondWith((async () => {
-        const cache = await caches.open(VENDOR_CACHE);
-        try {
-          const response = await fetch(req);
-          if (response && (response.ok || response.type === 'opaque')) await cache.put(req, response.clone());
-          return response;
-        } catch (error) {
-          const cached = await cache.match(req);
-          if (cached) return cached;
-          throw error;
-        }
-      })());
-    }
+    // Never cache translation queries or unrelated network requests.
+    if (!['cdnjs.cloudflare.com', 'cdn.jsdelivr.net', 'tessdata.projectnaptha.com'].includes(url.hostname)) return;
+    event.respondWith((async () => {
+      const cache = await caches.open(VENDOR_CACHE);
+      const hit = await cache.match(request);
+      if (hit) return hit;
+      const response = await fetch(request);
+      if (response.ok || response.type === 'opaque') await cache.put(request, response.clone());
+      return response;
+    })());
     return;
   }
-  // Network first for local files: a GitHub Pages update should not remain stale.
-  // Offline fallback serves previously cached files.
   event.respondWith((async () => {
-    const cache = await caches.open(CACHE_NAME);
+    const cache = await caches.open(SHELL_CACHE);
     try {
-      const response = await fetch(req);
-      if (response.ok) await cache.put(req, response.clone());
+      const response = await fetch(request);
+      if (response.ok) await cache.put(request, response.clone());
       return response;
     } catch (error) {
-      const cached = await cache.match(req);
-      if (cached) return cached;
-      if (req.mode === 'navigate') {
-        const index = await cache.match('./index.html');
-        if (index) return index;
-      }
+      const saved = await cache.match(request);
+      if (saved) return saved;
+      if (request.mode === 'navigate') return (await cache.match('./index.html')) || Response.error();
       throw error;
     }
   })());
