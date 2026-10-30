@@ -1,0 +1,283 @@
+# Offline English→Russian scientific / petroleum / process engineering lexicon.
+# Extend this file with local vocabulary. Tab separator: English term<TAB>translation(s).
+# This is a curated starter vocabulary, NOT a general machine translator.
+electrostatic coalescer	электростатический коалесцер; электродегидратор
+coalescer	коалесцер; аппарат для укрупнения капель
+coalescence	коалесценция; слияние капель
+coalesce	сливаться; укрупняться (о каплях)
+water-in-oil emulsion	эмульсия типа «вода в нефти»; обратная эмульсия
+water-oil emulsion	водонефтяная эмульсия
+emulsion	эмульсия
+emulsions	эмульсии
+oil-in-water emulsion	эмульсия типа «нефть в воде»
+crude oil	сырая нефть
+oil	нефть; масло
+water	вода
+hydrocarbon	углеводород
+petroleum	нефть; нефтяной
+upstream operations	операции добычи и подготовки нефти
+upstream	добывающий сектор; операции на промысле
+midstream	транспортировка и хранение углеводородов
+downstream	переработка; нефтеперерабатывающий сектор
+oil field	нефтяное месторождение
+oil well	нефтяная скважина
+well	скважина
+oil deposit	нефтяная залежь; нефтяное месторождение
+reservoir	пласт-коллектор; резервуар
+reservoir pressure	пластовое давление
+formation	геологическая формация; пласт
+formation water	пластовая вода
+produced water	попутно добываемая вода
+water cut	обводнённость продукции
+water content	содержание воды
+water removal	удаление воды; обезвоживание
+water separation	отделение воды
+de-watering	обезвоживание
+dehydration	обезвоживание
+dehydrator	дегидратор; обезвоживатель
+electrodehydrator	электродегидратор
+desalter	электрообессоливатель; аппарат обессоливания
+desalting	обессоливание
+salt	соль
+salinity	солёность; минерализация
+salt removal	удаление солей
+separation	разделение; сепарация
+phase separation	разделение фаз
+separator	сепаратор
+separation efficiency	эффективность разделения
+overall efficiency	общая эффективность
+efficiency	эффективность
+performance	эффективность работы; рабочие показатели
+yield	выход; производительность; результативность
+volumetric flow	объёмный расход
+volumetric flow rate	объёмный расход
+flow rate	расход; скорость потока
+inlet flow rate	входной расход
+outlet flow rate	выходной расход
+feedstock	сырьё; исходный поток
+feed	подаваемая смесь; сырьё
+inlet	вход; входной
+outlet	выход; выходной
+flow	поток; расход
+fluid	флюид; текучая среда
+bulk	основная масса жидкости; объём среды
+chamber	камера; отсек
+weir	переливная перегородка
+demister	каплеуловитель
+water collector	сборник воды
+collector	сборник; коллектор
+electrode	электрод
+electrical field	электрическое поле
+electric field	электрическое поле
+electrostatic field	электростатическое поле
+electric current	электрический ток
+alternate current	переменный ток
+alternating current	переменный ток
+direct current	постоянный ток
+continuous current	постоянный ток
+voltage	напряжение (электрическое)
+electrical field threshold	пороговая напряжённость электрического поля
+threshold	пороговое значение
+intensity	напряжённость; интенсивность
+permittivity	диэлектрическая проницаемость
+relative permittivity	относительная диэлектрическая проницаемость
+polarization	поляризация
+polarization effect	эффект поляризации
+interfacial tension	межфазное натяжение
+surface tension	поверхностное натяжение
+interfacial	межфазный
+interface	граница раздела фаз
+droplet	капля
+droplets	капли
+water droplet	капля воды
+droplet diameter	диаметр капли
+droplet radius	радиус капли
+droplet deformation	деформация капли
+droplet distribution	распределение капель
+size distribution	распределение по размерам
+diameter distribution	распределение по диаметрам
+dispersed phase	дисперсная фаза
+continuous phase	непрерывная фаза; дисперсионная среда
+biphasic	двухфазный
+immiscible	несмешивающийся
+disperse	диспергировать; распределять
+solids	твёрдые частицы
+solid removal	удаление твёрдых частиц
+sedimentation	осаждение
+sediment	осадок
+settling	отстаивание; осаждение
+gravity	сила тяжести; гравитация
+gravity separation	гравитационное разделение
+buoyancy	выталкивающая сила; плавучесть
+Archimedes contribution	сила Архимеда; вклад выталкивающей силы
+falling velocity	скорость оседания
+rising velocity	скорость всплывания
+residence time	время пребывания; время выдержки
+operational time	время работы; продолжительность операции
+operating conditions	условия эксплуатации
+operational parameters	рабочие параметры
+laminar flow	ламинарное течение
+laminar	ламинарный
+viscous flow	вязкое течение
+viscous	вязкий
+viscosity	вязкость
+dynamic viscosity	динамическая вязкость
+oil viscosity	вязкость нефти
+density	плотность
+density difference	разность плотностей
+concentration	концентрация
+water concentration	концентрация воды
+volumetric concentration	объёмная концентрация
+volume fraction	объёмная доля
+volumetric fraction	объёмная доля
+cross-sectional area	площадь поперечного сечения
+surface area	площадь поверхности
+pressure	давление
+friction	трение
+friction factor	коэффициент трения
+frictional factor	коэффициент сопротивления трению
+force	сила
+electrostatic force	электростатическая сила
+attraction	притяжение
+attraction force	сила притяжения
+collision	столкновение; соударение
+collision frequency	частота столкновений
+collision efficiency	эффективность столкновений
+critical diameter	критический диаметр
+average diameter	средний диаметр
+nominal diameter	номинальный диаметр
+mass balance	материальный баланс; баланс массы
+momentum balance	баланс количества движения
+number balance	баланс числа частиц
+conservation principle	закон сохранения
+mass conservation	сохранение массы
+steady state	установившийся режим; стационарное состояние
+steady-state	стационарный
+stability	устойчивость; стабильность
+emulsion stability	устойчивость эмульсии
+stable	устойчивый
+unstable	неустойчивый
+thermodynamic stability	термодинамическая устойчивость
+emulsifier	эмульгатор
+de-emulsifier	деэмульгатор
+demulsifier	деэмульгатор
+additive	добавка; присадка
+chemical additive	химическая добавка
+entrainer	вспомогательный реагент; агент разделения
+asphaltene	асфальтен
+resin	смола
+model	модель
+modeling	моделирование
+mathematical model	математическая модель
+mathematical modeling	математическое моделирование
+rigorous modeling	строгое математическое моделирование
+first-principles model	модель на основе фундаментальных физических законов
+first-principle	основанный на фундаментальных принципах
+fundamental law	фундаментальный закон
+boundary condition	граничное условие
+initial condition	начальное условие
+boundary value problem	краевая задача
+differential equation	дифференциальное уравнение
+differential system	система дифференциальных уравнений
+numerical solution	численное решение
+numerical integration	численное интегрирование
+integration step	шаг интегрирования
+iterative procedure	итерационная процедура
+iteration	итерация
+convergence	сходимость
+sensitivity analysis	анализ чувствительности
+sensitivity	чувствительность
+simulation	моделирование; вычислительный эксперимент
+simulation results	результаты моделирования
+calculation	расчёт; вычисление
+compute	вычислять; рассчитывать
+computational	вычислительный
+prediction	прогнозирование
+predictive control	прогнозирующее управление
+optimization	оптимизация
+monitoring	мониторинг; контроль
+characterization	определение характеристик
+assumption	допущение; предположение
+approximation	приближение; аппроксимация
+discretization	дискретизация
+probability distribution	распределение вероятностей
+lognormal distribution	логнормальное распределение
+heterogeneous	неоднородный; гетерогенный
+homogeneous	однородный; гомогенный
+experiment	эксперимент
+experimental	экспериментальный
+experimental data	экспериментальные данные
+sample	образец
+measurement	измерение
+research	исследование
+literature review	обзор литературы
+state of the art	современное состояние исследований; уровень техники
+parameter	параметр
+property	свойство; характеристика
+properties	свойства
+relationship	соотношение; взаимосвязь
+correlation	корреляция; зависимость
+coefficient	коэффициент
+function	функция
+variable	переменная
+value	значение
+result	результат
+increase	увеличиваться; увеличение
+decrease	уменьшаться; снижение
+influence	влияние; влиять
+induce	вызывать; индуцировать
+occur	происходить
+indicate	указывать; свидетельствовать
+demonstrate	демонстрировать; показывать
+estimate	оценивать
+obtain	получать
+require	требовать
+consider	рассматривать; учитывать
+provide	предоставлять; обеспечивать
+compare	сравнивать
+vary	изменяться
+variation	изменение; вариация
+relevant	существенный; релевантный
+appropriate	соответствующий; подходящий
+sufficient	достаточный
+negligible	пренебрежимо малый
+significant	значительный; существенный
+roughly	приблизительно
+respectively	соответственно
+moreover	более того; кроме того
+nevertheless	тем не менее
+therefore	следовательно; поэтому
+whereas	тогда как; в то время как
+thus	таким образом
+according to	согласно; в соответствии с
+in order to	для того чтобы
+in terms of	с точки зрения; в терминах
+with respect to	по отношению к; относительно
+as a result	в результате
+in addition	кроме того; дополнительно
+on the other hand	с другой стороны
+# additional drilling/geomechanics glossary for 2.8.4
+permeability	проницаемость
+porosity	пористость
+fracture	трещина; разрушение
+fractured rock	трещиноватая горная порода
+rock mass	массив горных пород
+rock	горная порода
+formation pressure	пластовое давление
+formation damage	повреждение призабойной зоны
+reservoir rock	порода-коллектор
+shear strength	прочность на сдвиг
+compressive strength	прочность при сжатии
+stress	механическое напряжение
+strain	деформация
+subsidence	оседание; проседание земной поверхности
+fracture pressure	давление гидроразрыва
+wellbore	ствол скважины
+drilling	бурение
+drilling mud	буровой раствор
+well logging	каротаж; геофизические исследования скважины
+hydraulic fracturing	гидравлический разрыв пласта
+production rate	дебит
+recovery factor	коэффициент извлечения
+fluid saturation	насыщенность флюидом
+reservoir simulation	моделирование разработки месторождения
