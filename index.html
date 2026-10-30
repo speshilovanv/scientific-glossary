@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#17243a">
+  <meta name="description" content="Офлайн-читалка научных PDF с английско-русским глоссарием">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <title>ScientificGlossary Web</title>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark">SG</div><div><strong>ScientificGlossary</strong><small>чтение PDF · научный глоссарий</small></div></div>
+    <div class="top-actions">
+      <span id="offlineBadge" class="status"><i></i> локальное хранение</span>
+      <button id="installBtn" class="btn btn-quiet hidden">Установить</button>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <aside class="sidebar">
+      <section class="panel upload-panel">
+        <div class="section-heading"><span class="section-icon">▤</span><div><h2>Моя библиотека</h2><p>Статьи, учебники и пособия</p></div></div>
+        <label class="btn btn-primary upload-button" for="pdfInput">＋ Добавить PDF</label>
+        <input id="pdfInput" type="file" accept="application/pdf,.pdf" hidden>
+        <div id="documentsList" class="documents-list"><div class="empty-small">Пока нет документов.<br>Добавьте PDF-файл.</div></div>
+      </section>
+      <section class="panel glossary-panel">
+        <div class="section-heading"><span class="section-icon">▧</span><div><h2>Глоссарий</h2><p><span id="entryCount">0</span> сохранённых терминов</p></div></div>
+        <input id="glossarySearch" class="search-input" type="search" placeholder="Найти термин…">
+        <div id="glossaryList" class="glossary-list"><div class="empty-small">Здесь появятся ваши слова.</div></div>
+        <div class="export-actions">
+          <button id="exportCsvBtn" class="btn btn-outline">CSV</button>
+          <button id="exportDocBtn" class="btn btn-outline">Word</button>
+          <button id="printBtn" class="btn btn-outline">PDF / печать</button>
+        </div>
+      </section>
+      <div class="sidebar-note"><strong>Работа без интернета</strong><br>Сохранённые документы и глоссарий хранятся в этом браузере на устройстве.</div>
+    </aside>
+
+    <section class="reader-area">
+      <div class="reader-toolbar">
+        <div class="doc-title-wrap"><span class="pdf-icon">PDF</span><div><strong id="currentDocName">Документ не открыт</strong><small id="pageInfo">Добавьте статью или учебник в формате PDF</small></div></div>
+        <div class="reader-controls">
+          <button id="prevPage" class="icon-btn" title="Предыдущая страница" disabled>‹</button>
+          <span id="pageCounter" class="page-counter">— / —</span>
+          <button id="nextPage" class="icon-btn" title="Следующая страница" disabled>›</button>
+          <span class="control-divider"></span>
+          <button id="zoomOut" class="icon-btn" title="Уменьшить">−</button>
+          <span id="zoomValue" class="zoom-value">100%</span>
+          <button id="zoomIn" class="icon-btn" title="Увеличить">＋</button>
+        </div>
+      </div>
+      <div id="readerViewport" class="reader-viewport">
+        <div id="welcome" class="welcome-card">
+          <div class="welcome-illustration">📖</div>
+          <h1>Читайте и собирайте свой словарь</h1>
+          <p>Загрузите англоязычную научную статью или учебник в PDF. Страница останется в оригинальном виде — вместе с графиками, схемами, формулами и таблицами.</p>
+          <label class="btn btn-primary" for="pdfInput">Выбрать PDF-файл</label>
+          <div class="welcome-hints"><span>✓ Локальный словарь</span><span>✓ Глоссарий по статьям</span><span>✓ Экспорт для печати</span></div>
+        </div>
+        <div id="pageWrap" class="page-wrap hidden">
+          <div id="pageContainer" class="page-container">
+            <canvas id="pdfCanvas"></canvas>
+            <div id="textLayer" class="textLayer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="reader-footer"><span id="readerHint">Подсказка: нажмите на английское слово в тексте, чтобы открыть карточку перевода.</span><button id="clearSelection" class="text-btn">Снять выделение</button></div>
+    </section>
+  </main>
+
+  <div id="termModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTerm">
+    <div class="modal-backdrop" data-close="1"></div>
+    <div class="modal-card">
+      <div class="modal-header"><div><span class="eyebrow">КАРТОЧКА ТЕРМИНА</span><h2 id="modalTerm">term</h2><span id="modalType" class="muted">Английский термин</span></div><button id="closeModal" class="icon-btn" aria-label="Закрыть">×</button></div>
+      <div class="field"><label for="translationInput">Варианты перевода</label><textarea id="translationInput" rows="2" placeholder="Введите перевод. Несколько значений разделяйте точкой с запятой."></textarea><small id="dictionaryStatus" class="field-help">Значение из локального словаря можно исправить.</small></div>
+      <div class="field"><label for="exampleInput">Пример употребления из статьи</label><textarea id="exampleInput" rows="3" placeholder="Предложение из текущей страницы"></textarea></div>
+      <div class="source-row"><span id="sourceInfo">Источник: —</span><span id="pageSource">Страница —</span></div>
+      <div class="modal-actions"><button id="cancelTerm" class="btn btn-outline">Отмена</button><button id="saveTerm" class="btn btn-primary">＋ Сохранить в глоссарий</button></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status"></div>
+  <section id="printArea" class="print-area"></section>
+
+  <script src="app.js"></script>
+</body>
+</html>
