@@ -170,7 +170,7 @@ button:disabled{opacity:.36;cursor:not-allowed}
 @media(max-width:440px){.page-jump{padding:0 2px;gap:2px}.page-jump input{width:33px;min-width:27px;max-width:36px;font-size:13px}.page-jump span{font-size:11px}.reader-controls{gap:3px}}
 
 </style>
-  <title>ScientificGlossary Reader · 1.8</title>
+  <title>ScientificGlossary Reader · 1.8.1</title>
 </head>
 <body>
   <header class="topbar">
@@ -1660,6 +1660,9 @@ nanoemulsion	наноэмульсия
   const DB_VERSION = 3;
   let db;
   let pdfDoc = null;
+  let pdfJsLoadPromise = null;
+  let pdfJsWorkerUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  let nativePdfObjectUrl = null;
   let readerReady = false;
   let documentOpenSerial = 0; // Reject outdated async document loads.
   let currentDoc = null;
@@ -1993,7 +1996,36 @@ nanoemulsion	наноэмульсия
     if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
       showToast('Пожалуйста, выберите файл PDF.'); return;
     }
-    if(!window.pdfjsLib){showToast('Для чтения PDF нужен интернет при первом запуске PDF.js.',7000);return;}
+    // Never reject a selected article just because a third-party PDF.js CDN
+    // is late or unavailable. Try loading it now; if unavailable, store the PDF
+    // and open it using the browser's built-in PDF viewer.
+    if(!db){showToast('Хранилище ещё подготавливается. Повторите выбор PDF через несколько секунд.',7000);return;}
+    if(!window.pdfjsLib){
+      try{
+        showToast('Подключаю модуль PDF.js…',6500);
+        await loadPdfJs();
+        pdfjsLib.GlobalWorkerOptions.workerSrc=pdfJsWorkerUrl;
+      }catch(engineError){
+        console.warn('PDF.js unavailable; switching to native PDF viewer',engineError);
+        try{
+          const bytes=await file.arrayBuffer();
+          if(!bytes.byteLength)throw new Error('Пустой PDF.');
+          const fingerprint=await fileFingerprint(bytes);
+          const same=(await dbAll('documents')).find(d=>d.size===bytes.byteLength&&
+            ((fingerprint&&d.fingerprint===fingerprint)||(d.name===file.name&&sameBytes(d.data,bytes))));
+          const doc=same||{id:makeId(),name:file.name,size:bytes.byteLength,addedAt:Date.now(),pages:0,data:bytes,fingerprint};
+          if(!same)await dbPut('documents',doc);
+          showNativePdf(doc);
+          await refreshDocuments();
+          showToast('PDF открыт во встроенном просмотрщике браузера. Для перевода нажатием необходим PDF.js; попробуйте подключиться к интернету.',10000);
+          return;
+        }catch(saveError){
+          console.error('PDF fallback failed',saveError);
+          showToast('Не удалось сохранить PDF: '+String(saveError?.message||saveError).slice(0,130),9000);
+          return;
+        }
+      }
+    }
     let stage = 'read';
     try {
       showToast('Читаю файл PDF…');
@@ -2039,15 +2071,45 @@ nanoemulsion	наноэмульсия
     } finally { elements.pdfInput.value = ''; }
   }
 
+  function clearNativePdf(){
+    const old=$('nativePdfViewer');if(old)old.remove();
+    if(nativePdfObjectUrl){URL.revokeObjectURL(nativePdfObjectUrl);nativePdfObjectUrl=null;}
+    elements.canvas.style.display='block';
+    elements.textLayer.style.display='';elements.highlights.style.display='';
+  }
+  function showNativePdf(doc){
+    clearNativePdf();
+    readerReady=false;pageWordBoxes=[];pdfDoc=null;currentDoc=doc;
+    elements.currentDocName.textContent=doc.name;
+    elements.pageInfo.textContent='Резервный просмотр PDF · перевод нажатием временно недоступен';
+    elements.welcome.classList.add('hidden');elements.pageWrap.classList.remove('hidden');
+    elements.canvas.style.display='none';
+    elements.textLayer.style.display='none';elements.highlights.style.display='none';
+    const container=elements.pageContainer;
+    container.style.width='min(100%, 1050px)';container.style.height='min(80vh, 900px)';
+    const frame=document.createElement('iframe');frame.id='nativePdfViewer';
+    frame.title='Встроенный просмотр PDF';frame.style.cssText='width:100%;height:100%;border:0;background:white';
+    nativePdfObjectUrl=URL.createObjectURL(new Blob([doc.data],{type:'application/pdf'}));
+    frame.src=nativePdfObjectUrl;container.append(frame);
+    elements.ocrStatus.textContent='Резервный просмотр: PDF.js недоступен. Можно читать PDF, добавить термин вручную и повторить подключение позже.';
+    elements.prevPage.disabled=true;elements.nextPage.disabled=true;$('pageJump').disabled=true;
+    switchMobileView('read');
+  }
   async function openDocument(id) {
     readerReady = false;
     const openToken=++documentOpenSerial;
     try {
       const doc = await dbGet('documents', id);
       if (!doc || openToken!==documentOpenSerial) return false;
+      if(!window.pdfjsLib){
+        try{await loadPdfJs();pdfjsLib.GlobalWorkerOptions.workerSrc=pdfJsWorkerUrl;}
+        catch(e){showNativePdf(doc);return true;}
+      }
+      clearNativePdf();
       // dbGet supplies an independent structured-clone of stored data.
       const task = pdfjsLib.getDocument({ data: new Uint8Array(doc.data) });
       const openedPdf = await task.promise;
+      if(!doc.pages&&openedPdf.numPages){doc.pages=openedPdf.numPages;await dbPut('documents',doc);}
       if(openToken!==documentOpenSerial){try{await openedPdf.destroy();}catch(_){} return false;}
       if(pdfDoc && pdfDoc !== openedPdf){ try { await pdfDoc.destroy(); } catch(_) {} }
       if(openToken!==documentOpenSerial){try{await openedPdf.destroy();}catch(_){} return false;}
@@ -2813,32 +2875,52 @@ nanoemulsion	наноэмульсия
     } catch (err) { console.warn('Service Worker registration failed', err); }
   }
   function loadPdfJs() {
-    if (window.pdfjsLib) return Promise.resolve();
-    return new Promise((resolve,reject)=>{
-      const sources=['https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
-        'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js'];
-      function tryNext(i){
-        if(i>=sources.length){reject(new Error('PDF.js: оба источника недоступны'));return;}
-        const script=document.createElement('script');script.src=sources[i];
-        script.onload=()=>window.pdfjsLib?resolve():tryNext(i+1);
-        script.onerror=()=>tryNext(i+1);document.head.append(script);
+    if(window.pdfjsLib)return Promise.resolve();
+    if(pdfJsLoadPromise)return pdfJsLoadPromise;
+    pdfJsLoadPromise=new Promise((resolve,reject)=>{
+      const sources=[
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+        'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js'
+      ];
+      let index=0;
+      function next(){
+        if(window.pdfjsLib){resolve();return;}
+        if(index>=sources.length){reject(new Error('Оба сервера PDF.js недоступны.'));return;}
+        const src=sources[index++];
+        const script=document.createElement('script');
+        let finished=false;
+        const timeout=setTimeout(()=>finish(false),7500);
+        function finish(ok){
+          if(finished)return;
+          finished=true;clearTimeout(timeout);
+          script.onload=null;script.onerror=null;
+          if(ok&&window.pdfjsLib){
+            pdfJsWorkerUrl=src.replace('/pdf.min.js','/pdf.worker.min.js');
+            resolve();
+          }else{script.remove();next();}
+        }
+        script.onload=()=>finish(!!window.pdfjsLib);
+        script.onerror=()=>finish(false);
+        script.src=src;document.head.append(script);
       }
-      tryNext(0);
-    });
+      next();
+    }).catch(err=>{pdfJsLoadPromise=null;throw err;});
+    return pdfJsLoadPromise;
   }
   async function init() {
-    await prepareServiceWorker();
+    // A stalled service-worker installation must never block the PDF reader.
+    void prepareServiceWorker();
     try {
       db=await openDb(); await loadDictionary();
       for(const row of await dbAll('customDictionary')) if(row.term&&row.translation)dictionary.set(row.term,row.translation);
       for(const e of await dbAll('entries')) if(e.term&&e.translation)dictionary.set(normalizeTerm(e.term),e.translation);
       await refreshDocuments();await refreshGlossary();
-      $('readerHint').textContent='v1.8 · Офлайн использует словарь и ранее сохранённые переводы · Проверяйте примеры по статье';
+      $('readerHint').textContent='v1.8.1 · Офлайн использует словарь и ранее сохранённые переводы · Проверяйте примеры по статье';
       if((await dbAll('documents')).length) switchMobileView('read');
     } catch(error){console.error(error);showToast('Невозможно открыть локальное хранилище браузера.',7500);return;}
     try {
       await loadPdfJs();
-      pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      pdfjsLib.GlobalWorkerOptions.workerSrc=pdfJsWorkerUrl;
     } catch(err){console.error(err);showToast('Не удалось загрузить PDF.js. Подключите интернет для первого запуска или повторите позже.',10000);}
     if(!window.isSecureContext && location.protocol!=='file:')showToast('Для локального хранения и офлайн-кэша откройте приложение по HTTPS.');
   }
