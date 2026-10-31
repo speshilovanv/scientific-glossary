@@ -27,7 +27,7 @@ const errors = [], results = [];
 const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, acceptDownloads: true });
 const page = await context.newPage();
 page.on('pageerror', error => errors.push(error.message));
-page.on('dialog', dialog => dialog.accept());
+page.on('dialog', dialog => dialog.accept(dialog.type()==='prompt'?'area':undefined));
 const check = async (name, fn) => { await fn(); results.push(name); console.log('PASS', name); };
 async function ready(p = page) {
   await p.waitForFunction(() => window.pdfjsLib && document.querySelector('#documentsList .empty-small, #documentsList .document-item'));
@@ -39,12 +39,6 @@ async function importPdf(name, bytes, p = page) {
   await p.locator('#pdfInput').setInputFiles({ name, mimeType: 'application/pdf', buffer: Buffer.from(bytes) });
   await p.waitForFunction(name => document.querySelector('#currentDocName').textContent === name, name);
   await painted(p);
-}
-async function manual(term, p = page) {
-  p.once('dialog', dialog => dialog.accept(term));
-  // The main test page has a general confirm handler; use real PDF clicks for it.
-  await p.locator('#manualTerm').click();
-  await p.locator('#termModal:not(.hidden)').waitFor();
 }
 async function clickWord(p = page, pageNumber = 1) {
   // Read the real saved PDF with the real engine, independently of the reader's private state.
@@ -216,6 +210,58 @@ test('Real PDF, storage, OCR, offline and 15-paper acceptance', { timeout: 90000
       await page.unroute('https://api.mymemory.translated.net/**');
       await page.locator('#translationMode').selectOption('offline');
     });
+    await check('manual term, multiple meanings, verified export and deletion', async () => {
+      await page.locator('#manualTerm').click();
+      await page.locator('#termModal:not(.hidden)').waitFor();
+      assert.equal(await page.locator('#modalTerm').textContent(),'area');
+      await page.locator('#meaningExamples').getByRole('button',{name:'площадь',exact:true}).click();
+      assert.equal(await page.locator('#translationInput').inputValue(),'площадь');
+      await page.locator('#exampleInput').fill('');
+      await page.locator('#reviewedCheckbox').check(); await page.locator('#saveTerm').click();
+      assert.ok(await page.locator('#termModal:not(.hidden)').isVisible());
+      await page.locator('#reviewedCheckbox').uncheck(); await page.locator('#saveTerm').click();
+      await page.locator('#termModal').waitFor({state:'hidden'});
+      await page.locator('#qualityFilter').selectOption('noexample');
+      assert.equal(await page.locator('.glossary-item').count(),1);
+      await page.locator('#qualityFilter').selectOption('all');
+      await page.locator('#exportVerifiedOnly').check();
+      const download=page.waitForEvent('download'); await page.locator('#exportCsvBtn').click();
+      await (await download).saveAs('test-results/verified-only.csv');
+      assert.doesNotMatch(await readFile('test-results/verified-only.csv','utf8'),/area/);
+      await page.locator('#exportVerifiedOnly').uncheck();
+      await page.locator('.glossary-item').filter({hasText:'area'}).locator('.delete-entry').click();
+      await page.waitForFunction(()=>document.querySelector('#entryCount').textContent==='2');
+    });
+    await check('source link, document filter, keyboard and reading mode', async () => {
+      await page.locator('.entry-source-btn').first().click();
+      await page.waitForFunction(()=>document.querySelector('#pageCounter').textContent==='1 / 3');
+      await page.keyboard.press('ArrowRight');
+      await page.waitForFunction(()=>document.querySelector('#pageCounter').textContent==='2 / 3');
+      await page.locator('#glossaryFilter').selectOption('current');
+      assert.equal(await page.locator('.glossary-item').count(),2);
+      await page.locator('#glossaryFilter').selectOption('all');
+      await page.locator('#focusReaderBtn').click();
+      assert.equal(await page.locator('#focusReaderBtn').getAttribute('aria-pressed'),'true');
+      await page.locator('#focusReaderBtn').click(); await painted();
+    });
+    await check('dictionary meanings and sentence translation preserve the PDF example', async () => {
+      // Deterministic service responses test UI wiring; real MyMemory is checked separately above.
+      await page.route('https://api.dictionaryapi.dev/**',route=>route.fulfill({json:[{word:'water',meanings:[{partOfSpeech:'noun',definitions:[{definition:'A liquid.',example:'Water flows through the pipe.'}]}]}]}));
+      await page.route('https://api.mymemory.translated.net/**',route=>route.fulfill({json:{responseStatus:200,responseData:{translatedText:new URL(route.request().url()).searchParams.get('q').includes(' ')?'Давление воды увеличивается во время эксперимента.':'вода'}}}));
+      await page.locator('#translationMode').selectOption('auto');
+      await clickWord(page,2);
+      const original=await page.locator('#exampleInput').inputValue();
+      await page.locator('#moreMeaningsBtn').click();
+      await page.waitForFunction(()=>document.querySelector('#meaningExamples').textContent.includes('A liquid.'));
+      assert.equal(await page.locator('#exampleInput').inputValue(),original);
+      await page.locator('#translateExampleBtn').click();
+      await page.waitForFunction(()=>document.querySelector('#exampleTranslationInput').value.includes('Давление воды'));
+      assert.equal(await page.locator('#exampleInput').inputValue(),original);
+      await page.locator('#cancelTerm').click();
+      await page.unroute('https://api.dictionaryapi.dev/**');
+      await page.unroute('https://api.mymemory.translated.net/**');
+      await page.locator('#translationMode').selectOption('offline');
+    });
     await check('15 published articles: real import, word click, example, save, final-page navigation', async () => {
       const papers = JSON.parse(await readFile('tests/papers.json', 'utf8'));
       const articleResults = [];
@@ -275,6 +321,13 @@ test('Real PDF, storage, OCR, offline and 15-paper acceptance', { timeout: 90000
       await page.screenshot({ path: 'test-results/mobile.png', fullPage: true });
       await page.setViewportSize({ width: 1440, height: 1000 });
       await page.screenshot({ path: 'test-results/desktop.png', fullPage: true });
+    });
+    await check('deleting an open PDF keeps glossary entries and clears navigation', async()=>{
+      const count=await page.locator('#entryCount').textContent();
+      await page.locator('.document-item.active .remove-doc').click();
+      await page.locator('#welcome').waitFor();
+      assert.equal(await page.locator('#entryCount').textContent(),count);
+      assert.ok(await page.locator('#pageJump').isDisabled());
     });
     assert.deepEqual(errors, [], 'No unhandled browser errors');
   } finally {
