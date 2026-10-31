@@ -169,15 +169,31 @@ button:disabled{opacity:.36;cursor:not-allowed}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @media(max-width:440px){.page-jump{padding:0 2px;gap:2px}.page-jump input{width:33px;min-width:27px;max-width:36px;font-size:13px}.page-jump span{font-size:11px}.reader-controls{gap:3px}}
 
+
+/* v1.9: concise dictionary senses, accessible selection and source-page correction. */
+.meaning-panel{margin:13px 0 4px;border:1px solid #e2e8e2;border-radius:13px;background:#fbfcfa;padding:11px}
+.meaning-panel-head{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;margin-bottom:9px}
+.meaning-panel-head h3{margin:0;color:#283d34;font-size:13px;font-weight:700}
+.meaning-cards{display:grid;gap:8px}.meaning-card{border-radius:10px;background:#fff;border:1px solid #e7ece7;padding:10px 11px;color:#283d34}
+.meaning-row{display:flex;gap:8px;align-items:start;justify-content:space-between}.meaning-row strong{font-size:13px;font-weight:650;line-height:1.5}
+.meaning-row .choose-meaning{border:1px solid #d9e7dd;border-radius:8px;min-height:34px;background:#f3f8f4;color:#17614b;font-size:11px;padding:6px 9px;flex:none;cursor:pointer}
+.meaning-label{display:block;font-size:10px;letter-spacing:.02em;color:#78867e;margin-bottom:3px}
+.meaning-example{font-size:12px;line-height:1.55;margin-top:6px}.meaning-example em{font-style:normal;color:#68786e;display:block;margin-top:3px}
+.meaning-empty{color:#637268;font-size:12px;line-height:1.55}
+.source-page-edit{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:#51645a}
+.source-page-edit input{width:73px;height:37px;border-radius:9px;border:1px solid #cddbd0;background:#fff;padding:5px 7px;font-size:13px;color:#264536}
+.word-highlight.dragging{background:#6fc3a75a;border-color:#287b65}
+.page-container.is-selecting{cursor:text}
+@media(max-width:760px){.meaning-panel{padding:10px}.meaning-panel-head{align-items:stretch}.source-page-edit input{min-width:60px}}
 </style>
-  <title>ScientificGlossary Reader · 1.8.1</title>
+  <title>ScientificGlossary Reader · 1.9</title>
 </head>
 <body>
   <header class="topbar">
     <div class="brand"><div class="brand-mark" aria-hidden="true">S<span>·</span></div><div><strong>ScientificGlossary</strong><small>Научная читалка</small></div></div>
     <div class="top-actions">
       <button id="focusReaderBtn" type="button" class="btn btn-outline focus-toggle" aria-pressed="false" title="Скрыть библиотеку и глоссарий и увеличить PDF">Режим чтения</button>
-      <span id="offlineBadge" class="status"><i></i> данные на устройстве <span class="version">v1.8</span></span>
+      <span id="offlineBadge" class="status"><i></i> данные на устройстве <span class="version">v1.9</span></span>
       <button id="installBtn" class="btn btn-quiet hidden">Установить</button>
     </div>
   </header>
@@ -238,7 +254,7 @@ button:disabled{opacity:.36;cursor:not-allowed}
           </div>
         </div>
       </div>
-      <div class="reader-footer"><span id="readerHint">Нажмите на слово · «Выделить фразу» для терминов из нескольких слов · OCR для сканов.</span><button id="clearSelection" class="text-btn">Снять выделение</button></div>
+      <div class="reader-footer"><span id="readerHint">Нажмите слово или выделите фразу протягиванием (на планшете — удержать и провести). OCR для сканов.</span><button id="clearSelection" class="text-btn">Снять выделение</button></div>
     </section>
   </main>
 
@@ -254,11 +270,16 @@ button:disabled{opacity:.36;cursor:not-allowed}
       <div class="modal-header"><div><span class="eyebrow">КАРТОЧКА ТЕРМИНА</span><h2 id="modalTerm">term</h2><span id="modalType" class="muted">Английский термин</span></div><button id="closeModal" class="icon-btn" aria-label="Закрыть">×</button></div>
       <div class="field"><div id="phraseSuggestions" class="phrase-suggestions" aria-label="Связанные научные выражения"></div><label for="translationInput">Варианты перевода</label><textarea id="translationInput" rows="2" spellcheck="false" placeholder="Введите перевод. Несколько значений разделяйте точкой с запятой."></textarea><small id="dictionaryStatus" class="field-help" aria-live="polite">Офлайн-словарь и ранее сохранённые переводы; значение можно изменить.</small>
         <div id="translationOptions" class="translation-options" aria-live="polite"></div>
-        <small class="translation-privacy">В режиме «Авто» сервис MyMemory получает выбранное слово/выражение. Локальный научный перевод сохраняет приоритет; онлайн-перевод предлагается как вариант. Предложение передаётся только по отдельной кнопке. Весь PDF не отправляется.</small></div>
+        <section class="meaning-panel" aria-labelledby="meaningTitle">
+          <div class="meaning-panel-head"><h3 id="meaningTitle">Другие значения и примеры</h3><button id="moreMeaningsBtn" class="btn btn-outline btn-small" type="button">Словарь онлайн</button></div>
+          <div id="meaningExamples" class="meaning-cards" aria-live="polite"></div>
+          <small id="meaningStatus" class="field-help">Локальные примеры составлены для обучения и не являются цитатами из статьи.</small>
+        </section>
+        <small class="translation-privacy">В режиме «Авто» MyMemory получает выбранное слово или выражение. Кнопка «Словарь онлайн» отправляет выбранное отдельное слово в Free Dictionary API. Исходное предложение передаётся только по кнопке перевода примера. Полный PDF не отправляется.</small></div>
       <div class="field"><label for="exampleInput">Пример употребления <span id="exampleQuality" class="example-quality"></span></label><textarea id="exampleInput" rows="3" placeholder="Предложение из текущей страницы"></textarea><div id="examplePreview" class="example-preview" aria-live="polite"></div>
         <div class="example-translation-head"><label for="exampleTranslationInput">Перевод примера (необязательно)</label><button type="button" id="translateExampleBtn" class="btn btn-outline btn-small">Перевести пример онлайн</button></div>
         <textarea id="exampleTranslationInput" rows="2" placeholder="Русский перевод исходного предложения, при необходимости"></textarea><small id="exampleTranslationStatus" class="field-help" aria-live="polite">Английский пример всегда остаётся из статьи.</small><label class="verified-label" for="reviewedCheckbox"><input id="reviewedCheckbox" type="checkbox"> Я проверил перевод и пример по статье</label></div>
-      <div class="source-row"><span id="sourceInfo">Источник: —</span><span id="pageSource">Страница —</span></div>
+      <div class="source-row"><span id="sourceInfo">Источник: —</span><label class="source-page-edit" for="sourcePageInput">Страница PDF <input id="sourcePageInput" type="number" min="1" step="1" inputmode="numeric" aria-label="Номер страницы PDF для термина"></label></div>
       <div class="modal-actions"><button id="cancelTerm" class="btn btn-outline">Отмена</button><button id="saveTerm" class="btn btn-primary">＋ Сохранить в глоссарий</button></div>
     </div>
   </div>
@@ -1652,7 +1673,7 @@ needle	игла; игольчатый электрод
 nanoemulsion	наноэмульсия
 
 </script><script>
-/* ScientificGlossary Reader v1.8 — direct page navigation and review workflow PDF import, offline cache and multi-document safety */
+/* ScientificGlossary Reader v1.9 — direct phrase selection, other meanings, explicit source page */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -1694,6 +1715,52 @@ nanoemulsion	наноэмульсия
   let editingTranslationByUser = false;
   let editingExampleTranslationByUser = false;
   let latestSuggestion = null;
+  let renderedSource = null; // The page actually painted on the canvas (not the page currently requested).
+  let gesture = null;
+  let suppressClickUntil = 0;
+  let touchHoldTimer = null;
+  let dictionaryRequestSerial = 0;
+  let lastDictionaryTerm = null;
+  let dictionaryRequestController = null;
+  const LOCAL_EXAMPLES = {
+    'area':[
+      ['область','The researchers focused on an area of fluid mechanics.','Исследователи сосредоточились на области механики жидкостей.'],
+      ['площадь','The surface area was calculated from the measured dimensions.','Площадь поверхности вычислили по измеренным размерам.'],
+      ['район','The samples were collected in the mining area.','Образцы отобрали в районе горных работ.']],
+    'decades':[['десятилетия','The technique has improved over the last two decades.','Метод совершенствовался в течение последних двух десятилетий.']],
+    'pressure':[['давление','The pressure increased during the experiment.','Во время эксперимента давление увеличилось.'],['нагрузка давлением','Pressure on the vessel wall was monitored.','Контролировали давление на стенку сосуда.']],
+    'stress':[['напряжение','The stress in the rock increased under load.','Напряжение в горной породе увеличилось под нагрузкой.'],['стресс','Prolonged stress can affect concentration.','Длительный стресс может влиять на концентрацию.']],
+    'strain':[['деформация','The measured strain increased as the load grew.','Измеренная деформация возрастала с увеличением нагрузки.'],['натяжение','The strain on the cable was monitored.','Контролировали натяжение троса.']],
+    'permeability':[['проницаемость','Rock permeability depends on connected pores.','Проницаемость горной породы зависит от связанных пор.']],
+    'coalescence':[['коалесценция','Coalescence of droplets accelerated the separation process.','Коалесценция капель ускорила процесс разделения.']],
+    'formation':[['образование','Droplet formation occurs at the interface.','Образование капель происходит на границе раздела.'],['пласт','The oil-bearing formation lies below the shale.','Нефтеносный пласт расположен под сланцем.']],
+    'flow':[['поток','The flow passed through the porous medium.','Поток проходил через пористую среду.'],['течение','The flow was assumed to be laminar.','Течение считалось ламинарным.']],
+    'field':[['поле','The electric field was applied across the electrodes.','Электрическое поле создавалось между электродами.'],['месторождение','The field contains several producing wells.','На месторождении имеется несколько добывающих скважин.']],
+    'failure':[['разрушение','Failure occurred when the stress exceeded the limit.','Разрушение произошло, когда напряжение превысило предел.'],['отказ','Pump failure interrupted the experiment.','Отказ насоса прервал эксперимент.']],
+    'yield':[['выход продукции','The process yield increased after optimization.','Выход продукции увеличился после оптимизации.'],['предел текучести','The yield stress was measured in shear tests.','Предел текучести определяли испытаниями на сдвиг.']],
+    'surface':[['поверхность','The surface of the specimen was polished.','Поверхность образца была отполирована.']],
+    'volume':[['объём','The sample volume was measured before testing.','Объём образца измерили перед испытанием.']],
+    'distribution':[['распределение','The distribution of pore sizes was estimated.','Оценили распределение пор по размерам.']],
+    'rate':[['скорость','The flow rate was monitored continuously.','Расход потока непрерывно контролировали.'],['темп','The rate of change increased after heating.','Темп изменения возрос после нагрева.']],
+    'sample':[['образец','A rock sample was placed in the testing cell.','Образец породы поместили в испытательную ячейку.']],
+    'rock':[['горная порода','The rock contained several fractures.','Горная порода содержала несколько трещин.']],
+    'crude oil':[['сырая нефть','The crude oil was mixed with water.','Сырую нефть смешали с водой.']],
+    'water removal':[['удаление воды','Water removal was improved by heating.','Удаление воды улучшилось при нагреве.']],
+    'density':[['плотность','Fluid density was measured at room temperature.','Плотность жидкости измеряли при комнатной температуре.']],
+    'viscosity':[['вязкость','The viscosity decreased as temperature increased.','Вязкость уменьшалась с ростом температуры.']],
+    'fracture':[['трещина','A fracture connected two pore networks.','Трещина соединяла две системы пор.'],['разрыв','Fracture of the specimen occurred under compression.','Разрушение образца произошло при сжатии.']],
+    'concentration':[['концентрация','The salt concentration was kept constant.','Концентрацию соли поддерживали постоянной.']],
+    'cell':[['ячейка','The cell contained a reference electrode.','Ячейка содержала электрод сравнения.'],['клетка','The cell membrane was examined under a microscope.','Клеточную мембрану исследовали под микроскопом.']],
+    'current':[['ток','The current increased as the voltage rose.','Ток увеличивался с ростом напряжения.'],['текущий','The current model ignores heat transfer.','Текущая модель не учитывает теплоперенос.']],
+    'load':[['нагрузка','The load was increased gradually.','Нагрузку увеличивали постепенно.'],['загружать','The operator will load the specimen into the chamber.','Оператор загрузит образец в камеру.']],
+    'model':[['модель','The numerical model reproduced the measured data.','Численная модель воспроизвела экспериментальные данные.']],
+    'treatment':[['обработка','The treatment improved oil–water separation.','Обработка улучшила разделение нефти и воды.'],['очистка','Water treatment reduced the contaminant level.','Очистка воды снизила уровень загрязнений.']],
+    'strength':[['прочность','Compressive strength was measured on cylindrical samples.','Прочность при сжатии измеряли на цилиндрических образцах.']],
+    'gradient':[['градиент','The pressure gradient drives flow through the rock.','Градиент давления вызывает течение через породу.']],
+    'boundary':[['граница','The boundary conditions were specified before simulation.','Граничные условия задали перед моделированием.']],
+    'recovery':[['извлечение','The recovery factor rose after water injection.','Коэффициент извлечения увеличился после закачки воды.'],['восстановление','Pressure recovery was observed after shut-in.','Восстановление давления наблюдали после остановки скважины.']],
+    'well':[['скважина','The well produced oil from a deep reservoir.','Скважина добывала нефть из глубокого коллектора.'],['хорошо','The equipment performed well during testing.','Оборудование хорошо работало во время испытаний.']]
+  };
 
   let deferredInstallPrompt = null;
   let toastTimer;
@@ -1841,6 +1908,88 @@ nanoemulsion	наноэмульсия
       elements.dictionaryStatus.textContent=`Выбран вариант: ${kind}. Проверьте значение в контексте.`;});
     root.append(b);
   }
+  function meaningParts(translation) {
+    return [...new Set(String(translation||'').split(/[;；]/g).map(x=>x.trim()).filter(Boolean))].slice(0,9);
+  }
+  function addMeaningCard(label, exampleEn='', exampleRu='', source='Учебный пример', definition='') {
+    const root=$('meaningExamples');
+    const card=document.createElement('article');card.className='meaning-card';
+    const top=document.createElement('div');top.className='meaning-row';
+    const left=document.createElement('div');
+    const sourceSpan=document.createElement('span');sourceSpan.className='meaning-label';sourceSpan.textContent=source;
+    const strong=document.createElement('strong');strong.textContent=label;
+    left.append(sourceSpan,strong);top.append(left);
+    if(source!=='Английский словарь · Dictionary API') {
+      const b=document.createElement('button');b.type='button';b.className='choose-meaning';b.textContent='Выбрать';
+      b.addEventListener('click',()=>{
+        elements.translationInput.value=label;editingTranslationByUser=true;
+        $('reviewedCheckbox').checked=false;
+        elements.dictionaryStatus.textContent='Выбрано значение: '+label+'. Проверьте его по контексту статьи.';
+      });top.append(b);
+    }
+    card.append(top);
+    if(definition){const d=document.createElement('p');d.className='meaning-example';d.textContent='Definition: '+definition;card.append(d);}
+    if(exampleEn){const p=document.createElement('p');p.className='meaning-example';
+      p.textContent=exampleEn;
+      if(exampleRu){const em=document.createElement('em');em.textContent=exampleRu;p.append(em);}
+      card.append(p);
+    }
+    root.append(card);
+  }
+  function refreshMeaningExamples(term, localTranslation) {
+    const root=$('meaningExamples');root.replaceChildren();
+    const meanings=meaningParts(localTranslation);
+    const sample=LOCAL_EXAMPLES[normalizeTerm(term)]||[];
+    if(!meanings.length&&!sample.length){
+      const text=document.createElement('p');text.className='meaning-empty';
+      text.textContent='В локальном словаре других значений пока нет. Попробуйте онлайн-словарь или добавьте перевод вручную.';root.append(text);
+    }else{
+      const seen=new Set();
+      for(const [sense,en,ru] of sample){seen.add(sense.toLowerCase());addMeaningCard(sense,en,ru,'Учебный пример · не из PDF');}
+      for(const meaning of meanings){if(!seen.has(meaning.toLowerCase())) addMeaningCard(meaning,'','','Локальное значение');}
+    }
+    $('meaningStatus').textContent='Примеры для значений — учебные. Подлинное предложение из PDF находится в поле «Пример употребления» ниже.';
+  }
+  async function requestDictionaryExamples() {
+    const term=pendingTerm;
+    const id=++dictionaryRequestSerial;
+    if(lastDictionaryTerm===term){$('meaningStatus').textContent='Дополнительные значения уже загружены для этого слова.';return;}
+    const btn=$('moreMeaningsBtn');
+    if(currentTranslationMode()==='offline'){$('meaningStatus').textContent='Офлайн-режим: используйте локальные значения и примеры.';return;}
+    if(!/^[a-zA-Z]+(?:[-'][a-zA-Z]+)*$/.test(term)){
+      $('meaningStatus').textContent='Английский словарь поддерживает отдельные слова. Для выражений доступны местные значения и перевод MyMemory.';return;
+    }
+    if(dictionaryRequestController) dictionaryRequestController.abort();
+    const ctrl=new AbortController();dictionaryRequestController=ctrl;
+    btn.disabled=true;$('meaningStatus').textContent='Получаю значения и примеры из английского словаря…';
+    const timer=setTimeout(()=>ctrl.abort(),6500);
+    try{
+      const response=await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(term),{signal:ctrl.signal,mode:'cors'});
+      if(!response.ok)throw new Error('HTTP '+response.status);
+      const data=await response.json();
+      if(id!==dictionaryRequestSerial||pendingTerm!==term||elements.modal.classList.contains('hidden'))return;
+      let count=0;
+      for(const item of Array.isArray(data)?data.slice(0,3):[])for(const meaning of (item.meanings||[]).slice(0,4)) {
+        for(const d of (meaning.definitions||[]).slice(0,3)){
+          if(count>=7)break;
+          if(typeof d.definition!=='string')continue;
+          addMeaningCard(String(meaning.partOfSpeech||'слово'),typeof d.example==='string'?d.example:'','',
+            'Английский словарь · Dictionary API',d.definition);
+          count++;
+        }
+      }
+      if(count)lastDictionaryTerm=term;
+      $('meaningStatus').textContent=count
+        ?'Добавлены определения и примеры на английском из Free Dictionary API. Это не русские переводы: сравните их с выбранным значением.'
+        :'Словарь не предоставил дополнительных определений или примеров.';
+    }catch(error){
+      if(id===dictionaryRequestSerial && !elements.modal.classList.contains('hidden'))
+        $('meaningStatus').textContent='Онлайн-словарь сейчас недоступен. Локальные значения и учебные примеры сохранены.';
+    }finally{
+      clearTimeout(timer);if(id===dictionaryRequestSerial)btn.disabled=false;
+    }
+  }
+  $('moreMeaningsBtn').addEventListener('click',requestDictionaryExamples);
   async function translateSelectedTerm(term, local, serial) {
     const key=normalizeTerm(term);
     if(currentTranslationMode()==='offline'){
@@ -1877,6 +2026,7 @@ nanoemulsion	наноэмульсия
       if(serial!==onlineRequestSerial||pendingTerm!==term||elements.modal.classList.contains('hidden'))return;
       if(local)addTranslationOption('Локально',local);
       addTranslationOption('MyMemory',translated);
+      if(!local) { for (const val of meaningParts(translated)) addMeaningCard(val,'','','Вариант · MyMemory'); }
       if(!local && !editingTranslationByUser)elements.translationInput.value=translated;
       elements.dictionaryStatus.textContent=local
         ?'Научный словарь — основной; альтернативный перевод MyMemory доступен ниже. Проверьте значение.'
@@ -2150,6 +2300,7 @@ nanoemulsion	наноэмульсия
 
   async function renderPage() {
     readerReady = false;
+    renderedSource=null;
     if (!pdfDoc) return;
     // Cancel out-of-order visual updates caused by rapid page turning/zoom.
     const renderToken = ++activePageRender;
@@ -2159,7 +2310,9 @@ nanoemulsion	наноэмульсия
       currentRenderTask = null;
     }
     if (renderToken !== activePageRender) return;
-    const page = await pdfDoc.getPage(currentPage);
+    const pageIndexAtRender=currentPage;
+    const documentIdAtRender=currentDoc?.id||'';
+    const page = await pdfDoc.getPage(pageIndexAtRender);
     if (renderToken !== activePageRender) return;
     if (currentDoc?.id) try {localStorage.setItem('sg-page-'+currentDoc.id, String(currentPage));} catch(_) {}
     elements.ocrStatus.textContent='Подготавливаю текст страницы…';
@@ -2205,6 +2358,7 @@ nanoemulsion	наноэмульсия
       // on caretRangeFromPoint: hidden PDF.js text spans may be offset relative
       // to the painted page, especially on zoom and in two-column papers.
       pageWordBoxes = layoutWordBoxes(textContent, viewport);
+      for(const word of pageWordBoxes){word.sourcePage=pageIndexAtRender;word.sourceDocId=documentIdAtRender;}
       // Selection uses PDF coordinates, not PDF.js's invisible HTML text layer.
       elements.textLayer.replaceChildren();
       readingLines = buildReadingLines(pageWordBoxes, viewport.width);
@@ -2229,6 +2383,7 @@ nanoemulsion	наноэмульсия
     elements.pageInfo.textContent = `Страница ${currentPage} из ${pdfDoc.numPages}`;
     $('columnJump').classList.toggle('hidden',!(window.innerWidth<=760 && viewport.width>elements.viewport.clientWidth+60));
     elements.viewport.scrollTop = 0; elements.viewport.scrollLeft = 0;
+    renderedSource={page:pageIndexAtRender,id:documentIdAtRender,name:currentDoc?.name||''};
     readerReady = true;
   }
 
@@ -2535,19 +2690,25 @@ nanoemulsion	наноэмульсия
   }
   function openTerm(term, occurrence = -1, existing=null) {
     const cleaned = term.trim().replace(/\s+/g,' ');
-    if (!cleaned || cleaned.length > 90) return;
+    if (!cleaned || cleaned.length > 180) {showToast('Выделите фразу длиной не более 180 символов.');return;}
     pendingTerm = cleaned;
+    lastDictionaryTerm=null;
+    if(dictionaryRequestController)dictionaryRequestController.abort();
+    ++dictionaryRequestSerial;
     pendingEditId = existing?.id || null;
-    pendingSource = existing ? {name:existing.sourceName,id:existing.sourceId,page:existing.page} : {name:currentDoc?.name||'',id:currentDoc?.id||'',page:currentPage};
+    pendingSource = existing ? {name:existing.sourceName,id:existing.sourceId,page:existing.page} : (occurrence && typeof occurrence==='object' && occurrence.box?.sourcePage ? {name:currentDoc?.name||'',id:occurrence.box.sourceDocId,page:occurrence.box.sourcePage} : {...(renderedSource||{name:currentDoc?.name||'',id:currentDoc?.id||'',page:currentPage})});
     const translation = existing?.translation ?? findTranslation(cleaned);
     currentSelectedBox=existing?null:(occurrence && typeof occurrence==='object'?occurrence.box:null);
     elements.modalTerm.textContent = cleaned;
     elements.translationInput.value = translation;
+    refreshMeaningExamples(cleaned,translation);
+    $('moreMeaningsBtn').disabled=false;
     elements.exampleInput.value = existing?.example ?? (currentSelectedBox?exampleFromWord(currentSelectedBox):sentenceFor(cleaned,typeof occurrence==='number'?occurrence:-1));
     $('reviewedCheckbox').checked = Boolean(existing?.reviewed);
     updateExamplePreview();
     elements.sourceInfo.textContent = `Источник: ${pendingSource.name || '—'}`;
-    elements.pageSource.textContent = `Страница ${pendingSource.page || '—'}`;
+    $('sourcePageInput').value=String(pendingSource.page||'');
+    $('sourcePageInput').max=String((pendingSource.id===currentDoc?.id&&pdfDoc)?pdfDoc.numPages:99999);
     elements.dictionaryStatus.textContent = existing ? 'Сохранённая запись. Изменения сохранятся в глоссарии.' : (translation ? '✓ Найдено в локальном словаре. Проверьте значение по контексту.' : 'Нет в локальном словаре — введите свой перевод. Приложение не придумывает значения.');
     elements.dictionaryStatus.classList.toggle('no-translation',!translation&&!existing);
     editingTranslationByUser=Boolean(existing);
@@ -2563,7 +2724,7 @@ nanoemulsion	наноэмульсия
     suggestions.replaceChildren();
     if(!existing && currentSelectedBox && !occurrence.phrase)for(const phrase of phraseSuggestions(currentSelectedBox)) {
       const b=document.createElement('button');b.type='button';b.className='phrase-chip';b.textContent=phrase;
-      b.addEventListener('click',()=>{pendingTerm=phrase;elements.modalTerm.textContent=phrase;elements.translationInput.value=findTranslation(phrase);updateExamplePreview();
+      b.addEventListener('click',()=>{pendingTerm=phrase;lastDictionaryTerm=null;++dictionaryRequestSerial;if(dictionaryRequestController)dictionaryRequestController.abort();elements.modalTerm.textContent=phrase;elements.translationInput.value=findTranslation(phrase);refreshMeaningExamples(phrase,findTranslation(phrase));updateExamplePreview();
         elements.dictionaryStatus.textContent='✓ Перевод словосочетания из локального словаря.';elements.dictionaryStatus.classList.remove('no-translation');suggestions.replaceChildren();
         if(onlineAbort)onlineAbort.abort();editingTranslationByUser=false;$('translationOptions').replaceChildren();
         addTranslationOption('Локально',findTranslation(phrase));
@@ -2591,7 +2752,7 @@ nanoemulsion	наноэмульсия
   }
   elements.exampleInput.addEventListener('input',()=>{$('reviewedCheckbox').checked=false;updateExamplePreview();});
 
-  function closeTerm() {++onlineRequestSerial;if(onlineAbort)onlineAbort.abort();if(exampleAbort)exampleAbort.abort();
+  function closeTerm() {++dictionaryRequestSerial;lastDictionaryTerm=null;if(dictionaryRequestController)dictionaryRequestController.abort();++onlineRequestSerial;if(onlineAbort)onlineAbort.abort();if(exampleAbort)exampleAbort.abort();
     elements.modal.classList.add('hidden'); pendingTerm = '';pendingEditId=null;pendingSource=null;currentSelectedBox=null;
     if (lastModalFocus?.focus) lastModalFocus.focus({preventScroll:true});lastModalFocus=null;
   }
@@ -2622,7 +2783,16 @@ nanoemulsion	наноэмульсия
       showToast('Для отметки «Проверено» нужен пример из статьи с выбранным термином. Снимите отметку или исправьте пример.',8500);elements.exampleInput.focus();return;
     }
     const entries = await dbAll('entries');
-    const src=pendingSource||{name:'',id:'',page:0};
+    const src={...(pendingSource||{name:'',id:'',page:0})};
+    const pageValue=$('sourcePageInput').value.trim();
+    const correctedPage=Number(pageValue);
+    const sourceDoc=src.id ? await dbGet('documents',src.id) : null;
+    const maxPage=Math.max(1,Number(sourceDoc?.pages)||((src.id===currentDoc?.id&&pdfDoc)?pdfDoc.numPages:99999));
+    if(pageValue && (!Number.isSafeInteger(correctedPage)||correctedPage<1||correctedPage>maxPage)){
+      showToast(`Укажите существующую страницу PDF: от 1 до ${maxPage}.`,6000);
+      $('sourcePageInput').focus();return;
+    }
+    if(pageValue)src.page=correctedPage;
     const duplicate = entries.find(e=>e.id===pendingEditId || (normalizeTerm(e.term)===normalizeTerm(pendingTerm) && e.sourceId===src.id));
     const entry = {id:duplicate?.id||makeId(),term:pendingTerm,translation,example,exampleTranslation,sourceName:src.name||'',sourceId:src.id||'',page:src.page||0,reviewed:$('reviewedCheckbox').checked,createdAt:duplicate?.createdAt||Date.now()};
     // Remember user-provided meanings locally for future lookups.
@@ -2819,8 +2989,99 @@ nanoemulsion	наноэмульсия
   elements.nextPage.addEventListener('click',async()=>{if(pdfDoc&&currentPage<pdfDoc.numPages){currentPage++;await renderPage();}});
   elements.zoomIn.addEventListener('click',async()=>{zoom=Math.min(2.5,zoom+.15);await renderPage();});
   elements.zoomOut.addEventListener('click',async()=>{zoom=Math.max(.55,zoom-.15);await renderPage();});
+  // Pointer drag selects contiguous words in the same PDF reading column.
+  // For touch, a short hold activates selection; ordinary swipes remain scroll gestures.
+  function wordFromClient(clientX,clientY) {
+    const rect=elements.pageContainer.getBoundingClientRect();
+    return wordAtPagePoint(clientX-rect.left,clientY-rect.top);
+  }
+  function getDragWords(first,last) {
+    if(!first||!last)return [];
+    if(first.sourceDocId!==last.sourceDocId||first.sourcePage!==last.sourcePage)return [];
+    if(!Number.isInteger(first.readingIndex)||!Number.isInteger(last.readingIndex))return linePhrase(first,last);
+    const tokens=readingTokens;
+    const lower=Math.min(first.readingIndex,last.readingIndex),upper=Math.max(first.readingIndex,last.readingIndex);
+    const words=tokens.slice(lower,upper+1);
+    if(words.length>28||words.length<1||words.some(w=>w.column!==first.column))return [];
+    if(words.some((w,i)=>i>0 && boundaryBetween(words[i-1],w)))return [];
+    if(words.map(w=>w.word).join(' ').length>180)return [];
+    return words;
+  }
+  function completeDragSelection(first,last) {
+    const words=getDragWords(first,last);
+    if(words.length>=2){
+      highlightWords(words);
+      openTerm(words.map(w=>w.word).join(' '),{box:words[0],phrase:true});
+    }else if(first===last && first){clickWord(first);}
+    else {elements.highlights.replaceChildren();showToast('Выделяйте одну фразу в одной колонке, не переходя через заголовки или рисунки.',4800);}
+  }
+  elements.pageContainer.addEventListener('pointerdown',e=>{
+    if(!pdfDoc||!readerReady||e.pointerType==='touch'||e.button!==0)return;
+    const w=wordFromClient(e.clientX,e.clientY);if(!w)return;
+    gesture={id:e.pointerId,first:w,last:w,x:e.clientX,y:e.clientY,dragging:false};
+  });
+  elements.pageContainer.addEventListener('pointermove',e=>{
+    if(!gesture||gesture.id!==e.pointerId)return;
+    const d=Math.hypot(e.clientX-gesture.x,e.clientY-gesture.y);
+    if(d>7)gesture.dragging=true;
+    if(gesture.dragging){
+      const w=wordFromClient(e.clientX,e.clientY);
+      if(w)gesture.last=w;
+      const selected=getDragWords(gesture.first,gesture.last);
+      if(selected.length)highlightWords(selected);
+    }
+  });
+  elements.pageContainer.addEventListener('pointerup',e=>{
+    if(!gesture||gesture.id!==e.pointerId)return;
+    const state=gesture;gesture=null;
+    if(state.dragging){
+      suppressClickUntil=Date.now()+450;
+      const last=wordFromClient(e.clientX,e.clientY)||state.last;
+      completeDragSelection(state.first,last);
+    }
+  });
+  elements.pageContainer.addEventListener('pointercancel',()=>{gesture=null;});
+  let touchHold=null;
+  elements.pageContainer.addEventListener('touchstart',e=>{
+    if(!pdfDoc||!readerReady||e.touches.length!==1)return;
+    const t=e.touches[0],w=wordFromClient(t.clientX,t.clientY);
+    if(!w)return;
+    touchHold={first:w,last:w,x:t.clientX,y:t.clientY,active:false};
+    touchHoldTimer=setTimeout(()=>{
+      if(!touchHold)return;
+      touchHold.active=true;
+      elements.pageContainer.classList.add('is-selecting');highlightWords([touchHold.first]);
+    },320);
+  },{passive:true});
+  elements.pageContainer.addEventListener('touchmove',e=>{
+    if(!touchHold||e.touches.length!==1)return;
+    const t=e.touches[0];
+    if(!touchHold.active){
+      if(Math.hypot(t.clientX-touchHold.x,t.clientY-touchHold.y)>9){clearTimeout(touchHoldTimer);touchHold=null;}
+      return;
+    }
+    // A held finger is selecting, rather than scrolling the PDF.
+    e.preventDefault();
+    const w=wordFromClient(t.clientX,t.clientY);
+    if(w)touchHold.last=w;
+    const selected=getDragWords(touchHold.first,touchHold.last);
+    if(selected.length)highlightWords(selected);
+  },{passive:false});
+  elements.pageContainer.addEventListener('touchend',e=>{
+    if(!touchHold)return;
+    clearTimeout(touchHoldTimer);
+    const state=touchHold;touchHold=null;
+    elements.pageContainer.classList.remove('is-selecting');
+    if(state.active){
+      e.preventDefault();suppressClickUntil=Date.now()+650;
+      if(e.changedTouches.length){const t=e.changedTouches[0];state.last=wordFromClient(t.clientX,t.clientY)||state.last;}
+      completeDragSelection(state.first,state.last);
+    }
+  },{passive:false});
+  elements.pageContainer.addEventListener('touchcancel',()=>{clearTimeout(touchHoldTimer);touchHold=null;elements.pageContainer.classList.remove('is-selecting');});
   // Click positions are matched against PDF character geometry, not HTML overlays.
   elements.pageContainer.addEventListener('click',e=>{
+    if(Date.now()<suppressClickUntil)return;
     if(!pdfDoc||!readerReady)return;
     const rect=elements.pageContainer.getBoundingClientRect();
     const word=wordAtPagePoint(e.clientX-rect.left,e.clientY-rect.top);
@@ -2915,7 +3176,7 @@ nanoemulsion	наноэмульсия
       for(const row of await dbAll('customDictionary')) if(row.term&&row.translation)dictionary.set(row.term,row.translation);
       for(const e of await dbAll('entries')) if(e.term&&e.translation)dictionary.set(normalizeTerm(e.term),e.translation);
       await refreshDocuments();await refreshGlossary();
-      $('readerHint').textContent='v1.8.1 · Офлайн использует словарь и ранее сохранённые переводы · Проверяйте примеры по статье';
+      $('readerHint').textContent='v1.9 · Нажмите слово или выделите фразу удержанием/протягиванием · Проверяйте примеры по статье';
       if((await dbAll('documents')).length) switchMobileView('read');
     } catch(error){console.error(error);showToast('Невозможно открыть локальное хранилище браузера.',7500);return;}
     try {
