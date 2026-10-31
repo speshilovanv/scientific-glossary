@@ -109,8 +109,27 @@ test('Real PDF, storage, OCR, offline and 15-paper acceptance', { timeout: 90000
       assert.match(await page.locator('#exampleInput').inputValue(), /Water pressure increases/);
       await page.locator('#reviewedCheckbox').check();
       await page.locator('#saveTerm').click();
-      await page.locator('#termModal.hidden').waitFor();
+      await page.locator('#termModal').waitFor({ state: 'hidden' });
       assert.equal(await page.locator('#entryCount').textContent(), '1');
+    });
+    await check('aborted IndexedDB commit keeps the editor and original entry', async () => {
+      await page.locator('.glossary-item strong').first().click();
+      await page.locator('#translationInput').fill('несохранённая правка');
+      await page.evaluate(() => {
+        const original=IDBObjectStore.prototype.put;
+        window.restorePut=()=>{IDBObjectStore.prototype.put=original;};
+        IDBObjectStore.prototype.put=function(value,...args){
+          const request=original.call(this,value,...args);
+          if(this.name==='entries')request.addEventListener('success',()=>this.transaction.abort());
+          return request;
+        };
+      });
+      await page.locator('#saveTerm').click();
+      await page.waitForFunction(()=>document.querySelector('#toast').textContent.includes('Не удалось сохранить'));
+      assert.ok(await page.locator('#termModal:not(.hidden)').isVisible());
+      await page.evaluate(()=>window.restorePut());
+      await page.locator('#cancelTerm').click();
+      assert.doesNotMatch(await page.locator('#glossaryList').textContent(),/несохранённая/);
     });
     await check('phrase drag', async () => {
       const rect = await page.locator('#pageContainer').boundingBox();
@@ -207,7 +226,7 @@ test('Real PDF, storage, OCR, offline and 15-paper acceptance', { timeout: 90000
         const example = await page.locator('#exampleInput').inputValue();
         assert.ok(example.toLowerCase().includes(term.toLowerCase()));
         if (!(await page.locator('#translationInput').inputValue())) await page.locator('#translationInput').fill('контрольная запись QA');
-        await page.locator('#saveTerm').click(); await page.locator('#termModal.hidden').waitFor();
+        await page.locator('#saveTerm').click(); await page.locator('#termModal').waitFor({ state: 'hidden' });
         await page.locator('#pageJump').fill(String(paper.pages)); await page.locator('#pageJump').press('Enter');
         await page.waitForFunction(pages => document.querySelector('#pageCounter').textContent === `${pages} / ${pages}`, paper.pages);
         articleResults.push({ id: paper.id, pages: paper.pages, selected: term, example, passed: true });
