@@ -3212,8 +3212,21 @@ nanoemulsion	наноэмульсия
   async function prepareServiceWorker() {
     if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
     try {
-      await navigator.serviceWorker.register('sw.js');
+      const registration=await navigator.serviceWorker.register('sw.js');
+      const installing=registration.installing||registration.waiting;
+      if(installing&&installing.state!=='activated')await new Promise((resolve,reject)=>{
+        installing.addEventListener('statechange',()=>{
+          if(installing.state==='activated')resolve();
+          if(installing.state==='redundant')reject(new Error('Не все компоненты сохранены.'));
+        });
+      });
       await navigator.serviceWorker.ready;
+      const cache=await caches.open('scientific-glossary-shell-2.0.0');
+      const manifestResponse=await cache.match(new URL('vendor/manifest.json',location.href));
+      if(!manifestResponse)throw new Error('Offline installation incomplete');
+      const manifest=await manifestResponse.json();
+      const stored=await Promise.all(manifest.files.map(f=>cache.match(new URL(f.path,location.href))));
+      if(stored.some(hit=>!hit))throw new Error('Offline components incomplete');
       $('offlineState').textContent='готово без сети';
       if (!navigator.serviceWorker.controller) {
         await Promise.race([
