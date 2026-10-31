@@ -1,18 +1,24 @@
-/* ScientificGlossary Reader 1.9 — offline application shell. */
-const SHELL_CACHE = 'scientific-glossary-shell-1.9.0';
-const VENDOR_CACHE = 'scientific-glossary-vendor-1.9.0';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './assets/icon.svg', './assets/icon-192.png', './assets/icon-512.png'];
+/* ScientificGlossary 2.0: complete versioned offline installation. */
+const SHELL_CACHE = 'scientific-glossary-shell-2.0.0';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './assets/icon.svg', './assets/icon-192.png', './assets/icon-512.png', './vendor/manifest.json'];
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(SHELL_CACHE);
+    const response = await fetch('./vendor/manifest.json', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Offline manifest unavailable');
+    const manifest = await response.json();
     await cache.addAll(SHELL);
+    // Activate only when all components are saved. Previous install survives a failure.
+    for (let i = 0; i < manifest.files.length; i += 12) {
+      await cache.addAll(manifest.files.slice(i, i + 12).map(file => './' + file.path));
+    }
     await self.skipWaiting();
   })());
 });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
     for (const key of await caches.keys()) {
-      if (key.startsWith('scientific-glossary-') && key !== SHELL_CACHE && key !== VENDOR_CACHE) await caches.delete(key);
+      if (key.startsWith('scientific-glossary-') && key !== SHELL_CACHE) await caches.delete(key);
     }
     await self.clients.claim();
   })());
@@ -21,30 +27,14 @@ self.addEventListener('fetch', event => {
   const request = event.request;
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin) {
-    // Never cache translation queries or unrelated network requests.
-    if (!['cdnjs.cloudflare.com', 'cdn.jsdelivr.net', 'tessdata.projectnaptha.com'].includes(url.hostname)) return;
-    event.respondWith((async () => {
-      const cache = await caches.open(VENDOR_CACHE);
-      const hit = await cache.match(request);
-      if (hit) return hit;
-      const response = await fetch(request);
-      if (response.ok || response.type === 'opaque') await cache.put(request, response.clone());
-      return response;
-    })());
-    return;
-  }
+  // Translation and dictionary services are never intercepted.
+  if (url.origin !== self.location.origin) return;
   event.respondWith((async () => {
     const cache = await caches.open(SHELL_CACHE);
-    try {
-      const response = await fetch(request);
-      if (response.ok) await cache.put(request, response.clone());
-      return response;
-    } catch (error) {
-      const saved = await cache.match(request);
-      if (saved) return saved;
-      if (request.mode === 'navigate') return (await cache.match('./index.html')) || Response.error();
-      throw error;
-    }
+    // HTML and modules come from the same installed version during deployments too.
+    const saved = await cache.match(request, { ignoreSearch: true });
+    if (saved) return saved;
+    if (request.mode === 'navigate') return (await cache.match('./index.html')) || fetch(request);
+    return fetch(request);
   })());
 });
