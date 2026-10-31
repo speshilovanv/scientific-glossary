@@ -1871,11 +1871,11 @@ nanoemulsion	наноэмульсия
   $('focusReaderBtn').addEventListener('click',()=>{
     const focused=!document.body.classList.contains('focus-reading');setFocusReading(focused);
     if(!focused)switchMobileView('library');
-    if(pdfDoc)requestAnimationFrame(()=>renderPage());
+    if(pdfDoc)void renderPage();
   });
   $('readerToolsToggle').addEventListener('click',()=>{
     const open=document.body.classList.toggle('focus-tools-open');$('readerToolsToggle').setAttribute('aria-expanded',String(open));
-    if(pdfDoc)requestAnimationFrame(()=>renderPage());
+    if(pdfDoc)void renderPage();
   });
   $('pageFit').addEventListener('change',()=>{
     zoom=1;try{localStorage.setItem('sg-fit-mode',$('pageFit').value);}catch(_){}
@@ -3469,7 +3469,7 @@ nanoemulsion	наноэмульсия
     zoom=state.targetZoom;
     // Rasterize once after the gesture for sharp text and fresh hit geometry.
     void renderPage({pinchAnchor:state.anchor}).then(()=>{
-      suppressClickUntil=Math.max(suppressClickUntil,Date.now()+650);
+      if(state.documentId===currentDoc?.id&&state.page===currentPage)suppressClickUntil=Math.max(suppressClickUntil,Date.now()+650);
     }).catch(error=>console.warn('Pinch redraw failed',error));
   }
   elements.viewport.addEventListener('touchstart',event=>{
