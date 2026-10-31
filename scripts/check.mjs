@@ -11,7 +11,15 @@ assert.equal(scripts.length, 2);
 for (const [i, script] of scripts.entries()) new vm.Script(script[1], { filename: `embedded-${i}.js` });
 new vm.Script(await readFile('sw.js', 'utf8'));
 assert.ok(!html.includes('3.11.174'), 'Old CDN-dependent PDF.js must not return');
+const dictionary = await readFile('vendor/dictionary/eng-rus.tsv', 'utf8');
+assert.ok(dictionary.split('\n').length > 50000, 'Extended offline dictionary must ship');
+assert.match(dictionary, /^concept\t.*понятие/m);
+const version = JSON.parse(await readFile('package.json', 'utf8')).version;
+assert.ok(html.includes(`ScientificGlossary Reader · ${version}`));
+assert.ok(html.includes(`scientific-glossary-shell-${version}`));
+assert.ok((await readFile('sw.js', 'utf8')).includes(`scientific-glossary-shell-${version}`));
 const manifest = JSON.parse(await readFile('vendor/manifest.json', 'utf8'));
+assert.ok(manifest.files.some(f => f.path === 'vendor/dictionary/eng-rus.tsv'), 'Offline cache must contain dictionary');
 for (const file of manifest.files) {
   const bytes = await readFile(file.path);
   assert.equal(bytes.length, file.bytes, file.path);

@@ -3,6 +3,26 @@
   "tesseract": "7.0.0",
   "files": [
     {
+      "path": "vendor/dictionary/ATTRIBUTION.txt",
+      "bytes": 760,
+      "sha256": "20c2893ff05b304c756bce1750261a8361386f64eee52e8c90e658682853b923"
+    },
+    {
+      "path": "vendor/dictionary/COPYING",
+      "bytes": 22459,
+      "sha256": "41a8f57655bae359bea4a7e99c7a2aed171687d3dfb49614214538ba6dcbe75b"
+    },
+    {
+      "path": "vendor/dictionary/eng-rus.tsv",
+      "bytes": 3314671,
+      "sha256": "1f314687ec0ed759ff0c9ab55ea0b32b7b3dd882e7623cfe152f70e6da4e7221"
+    },
+    {
+      "path": "vendor/dictionary/source.json",
+      "bytes": 606,
+      "sha256": "81c2fbcfbe5b7b3dda10629dabb932cb1f2a982b696b4f989543fdb98bc1db7f"
+    },
+    {
       "path": "vendor/eng.traineddata.gz",
       "bytes": 2952873,
       "sha256": "45b4cb346724ac1774f1c36f42f182b887bcdb28ebe63e6fff90ac41f3fcff91"

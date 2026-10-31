@@ -1,0 +1,12 @@
+English–Russian dictionary: WikDict / FreeDict, edition 2025.11.23.
+Maintainer: Karl Bartel. Original data: Wiktionary contributors via DBnary.
+https://www.wikdict.com/
+https://www.wiktionary.org/
+https://freedict.org/
+License: Creative Commons Attribution-ShareAlike 3.0 Unported.
+https://creativecommons.org/licenses/by-sa/3.0/
+The accompanying COPYING preserves the source license.
+Source archive: https://download.freedict.org/dictionaries/eng-rus/2025.11.23/freedict-eng-rus-2025.11.23.src.tar.xz
+Changes: English keys lowercased, Russian stress marks removed, affix entries excluded,
+translations flattened to TSV and duplicate meanings merged. The adapted TSV is
+distributed under the same CC BY-SA 3.0 license. Rebuild: python3 scripts/dictionary.py
