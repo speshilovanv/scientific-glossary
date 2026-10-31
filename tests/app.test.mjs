@@ -104,6 +104,7 @@ test('Real PDF, storage, OCR, offline and 15-paper acceptance', { timeout: 90000
       await page.locator('#reviewedCheckbox').check();
       await page.locator('#saveTerm').click();
       await page.locator('#termModal').waitFor({ state: 'hidden' });
+      await page.waitForFunction(()=>document.querySelector('#entryCount').textContent==='1');
       assert.equal(await page.locator('#entryCount').textContent(), '1');
     });
     await check('aborted IndexedDB commit keeps the editor and original entry', async () => {
@@ -152,6 +153,7 @@ test('Real PDF, storage, OCR, offline and 15-paper acceptance', { timeout: 90000
       await importPdf('Acceptance.pdf', fixtureBytes);
       assert.equal(await page.locator('.document-item').count(), 1);
       await page.reload(); await ready();
+      await page.waitForFunction(()=>document.querySelector('#entryCount').textContent==='1');
       assert.equal(await page.locator('#entryCount').textContent(), '1');
       await page.locator('.document-item strong').click(); await painted();
       assert.equal(await page.locator('#pageCounter').textContent(), '2 / 3');
@@ -176,10 +178,12 @@ test('Real PDF, storage, OCR, offline and 15-paper acceptance', { timeout: 90000
       await page.waitForFunction(() => document.querySelector('#entryCount').textContent === '2');
       assert.match(await page.locator('#glossaryList').textContent(), /вод/);
       await page.locator('#glossarySearch').fill('старой');
-      assert.equal(await page.locator('.glossary-item').count(), 1);
+      await page.waitForFunction(n=>document.querySelectorAll('.glossary-item').length===n,1);
+      assert.equal(await page.locator('.glossary-item').count(),1);
       await page.locator('#glossarySearch').fill('');
       await page.locator('#qualityFilter').selectOption('reviewed');
-      assert.equal(await page.locator('.glossary-item').count(), 2);
+      await page.waitForFunction(n=>document.querySelectorAll('.glossary-item').length===n,2);
+      assert.equal(await page.locator('.glossary-item').count(),2);
       await page.locator('#qualityFilter').selectOption('all');
     });
     await check('TSV import and immediate offline lookup', async () => {
@@ -222,6 +226,8 @@ test('Real PDF, storage, OCR, offline and 15-paper acceptance', { timeout: 90000
       await page.locator('#reviewedCheckbox').uncheck(); await page.locator('#saveTerm').click();
       await page.locator('#termModal').waitFor({state:'hidden'});
       await page.locator('#qualityFilter').selectOption('noexample');
+      await page.waitForFunction(()=>document.querySelectorAll('.glossary-item').length===1);
+      await page.waitForFunction(n=>document.querySelectorAll('.glossary-item').length===n,1);
       assert.equal(await page.locator('.glossary-item').count(),1);
       await page.locator('#qualityFilter').selectOption('all');
       await page.locator('#exportVerifiedOnly').check();
@@ -238,6 +244,7 @@ test('Real PDF, storage, OCR, offline and 15-paper acceptance', { timeout: 90000
       await page.keyboard.press('ArrowRight');
       await page.waitForFunction(()=>document.querySelector('#pageCounter').textContent==='2 / 3');
       await page.locator('#glossaryFilter').selectOption('current');
+      await page.waitForFunction(n=>document.querySelectorAll('.glossary-item').length===n,2);
       assert.equal(await page.locator('.glossary-item').count(),2);
       await page.locator('#glossaryFilter').selectOption('all');
       await page.locator('#focusReaderBtn').click();
