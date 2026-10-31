@@ -98,7 +98,9 @@ test('tablet focus layout, bookmarks with notes and automatic offline resume', {
     await page.locator('#closeBookmarks').click();
     passed.push('offline reload restores bookmarked PDF, page, zoom and reading position; note edits do not duplicate bookmarks');
 
-    await page.locator('#pdfInput').setInputFiles({ name: 'Reading.pdf', mimeType: 'application/pdf', buffer: bytes }); await painted(2);
+    await page.locator('#pdfInput').setInputFiles({ name: 'Reading.pdf', mimeType: 'application/pdf', buffer: bytes });
+    await page.waitForFunction(() => !document.querySelector('#pdfInput').disabled);
+    await painted(2);
     assert.equal(await page.locator('.document-item').count(), 1);
     await jump(3); await page.locator('#bookmarksBtn').click();
     await page.locator('#bookmarkNote').fill('Вторая закладка'); await page.locator('#saveBookmark').click();

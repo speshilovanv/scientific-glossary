@@ -1,4 +1,4 @@
-# ScientificGlossary Reader 2.2.0
+# ScientificGlossary Reader 2.2.1
 
 Читалка научных PDF с англо-русским глоссарием для браузеров на компьютере, Android и Huawei.
 

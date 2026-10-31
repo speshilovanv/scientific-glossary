@@ -170,7 +170,7 @@ button:disabled{opacity:.36;cursor:not-allowed}
 @media(max-width:440px){.page-jump{padding:0 2px;gap:2px}.page-jump input{width:33px;min-width:27px;max-width:36px;font-size:13px}.page-jump span{font-size:11px}.reader-controls{gap:3px}}
 
 
-/* v2.2.0: concise dictionary senses, accessible selection and source-page correction. */
+/* v2.2.1: concise dictionary senses, accessible selection and source-page correction. */
 .meaning-panel{margin:13px 0 4px;border:1px solid #e2e8e2;border-radius:13px;background:#fbfcfa;padding:11px}
 .meaning-panel-head{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;margin-bottom:9px}
 .meaning-panel-head h3{margin:0;color:#283d34;font-size:13px;font-weight:700}
@@ -237,14 +237,14 @@ body.focus-reading #readerToolsToggle{display:inline-grid}
  body.focus-reading .reader-tools .mode-control{width:auto}
 }
 </style>
-  <title>ScientificGlossary Reader · 2.2.0</title>
+  <title>ScientificGlossary Reader · 2.2.1</title>
 </head>
 <body>
   <header class="topbar">
     <div class="brand"><div class="brand-mark" aria-hidden="true">S<span>·</span></div><div><strong>ScientificGlossary</strong><small>Научная читалка</small></div></div>
     <div class="top-actions">
       <button id="focusReaderBtn" type="button" class="btn btn-outline focus-toggle" aria-pressed="false" title="Скрыть библиотеку и глоссарий и увеличить PDF">Режим чтения</button>
-      <span id="offlineBadge" class="status"><i></i> <span id="offlineState">подготовка офлайн…</span> <span class="version">v2.2.0</span></span>
+      <span id="offlineBadge" class="status"><i></i> <span id="offlineState">подготовка офлайн…</span> <span class="version">v2.2.1</span></span>
       <button id="installBtn" class="btn btn-quiet hidden">Установить</button>
     </div>
   </header>
@@ -1738,7 +1738,7 @@ needle	игла; игольчатый электрод
 nanoemulsion	наноэмульсия
 
 </script><script>
-/* ScientificGlossary Reader v2.2.0 — direct phrase selection, other meanings, explicit source page */
+/* ScientificGlossary Reader v2.2.1 — direct phrase selection, other meanings, explicit source page */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -2418,6 +2418,7 @@ nanoemulsion	наноэмульсия
   function showNativePdf(doc){
     clearNativePdf();
     readerReady=false;pageWordBoxes=[];pdfDoc=null;currentDoc=doc;
+    $('bookmarksBtn').disabled=true;
     elements.currentDocName.textContent=doc.name;
     elements.pageInfo.textContent='Резервный просмотр PDF · перевод нажатием временно недоступен';
     elements.welcome.classList.add('hidden');elements.pageWrap.classList.remove('hidden');
@@ -2435,6 +2436,7 @@ nanoemulsion	наноэмульсия
   }
   async function openDocument(id, options={}) {
     readerReady = false;
+    $('bookmarksBtn').disabled=true;
     ++activePageRender; ++ocrRunSerial;
     const openToken=++documentOpenSerial;
     try {
@@ -2497,6 +2499,7 @@ nanoemulsion	наноэмульсия
   async function renderPage(restorePosition=null) {
     const position=restorePosition || (readerReady&&renderedSource?.id===currentDoc?.id&&renderedSource?.page===currentPage?captureReadingPosition():null);
     readerReady = false;
+    $('bookmarksBtn').disabled=true;
     renderedSource=null;
     if (!pdfDoc) return;
     $('pageJump').disabled=true;
@@ -3504,7 +3507,7 @@ nanoemulsion	наноэмульсия
         });
       });
       await navigator.serviceWorker.ready;
-      const cache=await caches.open('scientific-glossary-shell-2.2.0');
+      const cache=await caches.open('scientific-glossary-shell-2.2.1');
       const manifestResponse=await cache.match(new URL('vendor/manifest.json',location.href));
       if(!manifestResponse)throw new Error('Offline installation incomplete');
       const manifest=await manifestResponse.json();
@@ -3535,14 +3538,14 @@ nanoemulsion	наноэмульсия
       for(const row of await dbAll('customDictionary')) if(row.term&&row.translation)dictionary.set(row.term,row.translation);
       for(const e of await dbAll('entries')) if(e.term&&e.translation)dictionary.set(normalizeTerm(e.term),e.translation);
       await refreshDocuments();await refreshGlossary();
-      $('readerHint').textContent='v2.2.0 · Нажмите слово или выделите фразу удержанием/протягиванием · Проверяйте примеры по статье';
+      $('readerHint').textContent='v2.2.1 · Нажмите слово или выделите фразу удержанием/протягиванием · Проверяйте примеры по статье';
       if((await dbAll('documents')).length) switchMobileView('read');
     } catch(error){console.error(error);showToast('Невозможно открыть локальное хранилище браузера.',7500);return;}
     const initialOpenSerial=documentOpenSerial;
     try {
       await loadPdfJs();
       pdfjsLib.GlobalWorkerOptions.workerSrc=pdfJsWorkerUrl;
-      if(documentOpenSerial===initialOpenSerial){
+      if(initialOpenSerial===0&&documentOpenSerial===initialOpenSerial){
         const docs=await dbAll('documents');
         let lastId='';try{lastId=localStorage.getItem('sg-last-document')||'';}catch(_){}
         const last=docs.find(d=>d.id===lastId)||docs.filter(d=>d.addedAt).sort((a,b)=>b.addedAt-a.addedAt)[0];

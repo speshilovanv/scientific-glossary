@@ -80,10 +80,10 @@ test('Interrupted upgrade preserves offline app and data; retry replaces stale H
       await changed;
     });
     await page.reload();
-    assert.equal(await page.title(), 'ScientificGlossary Reader · 2.2.0');
+    assert.equal(await page.title(), 'ScientificGlossary Reader · 2.2.1');
     await page.waitForFunction(() => document.querySelector('#offlineState').textContent === 'готово без сети');
     await page.context().setOffline(true); await page.reload();
-    assert.equal(await page.title(), 'ScientificGlossary Reader · 2.2.0');
+    assert.equal(await page.title(), 'ScientificGlossary Reader · 2.2.1');
     const restored = await page.evaluate(async () => {
       const db = await new Promise(resolve => { const r = indexedDB.open('scientific-glossary-web', 3); r.onsuccess = () => resolve(r.result); });
       const data = {};
