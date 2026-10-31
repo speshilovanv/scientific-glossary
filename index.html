@@ -170,7 +170,7 @@ button:disabled{opacity:.36;cursor:not-allowed}
 @media(max-width:440px){.page-jump{padding:0 2px;gap:2px}.page-jump input{width:33px;min-width:27px;max-width:36px;font-size:13px}.page-jump span{font-size:11px}.reader-controls{gap:3px}}
 
 
-/* v2.3.0: concise dictionary senses, accessible selection and source-page correction. */
+/* v2.3.1: concise dictionary senses, accessible selection and source-page correction. */
 .meaning-panel{margin:13px 0 4px;border:1px solid #e2e8e2;border-radius:13px;background:#fbfcfa;padding:11px}
 .meaning-panel-head{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;margin-bottom:9px}
 .meaning-panel-head h3{margin:0;color:#283d34;font-size:13px;font-weight:700}
@@ -237,15 +237,22 @@ body.focus-reading #readerToolsToggle{display:inline-grid}
  body.focus-reading .control-divider{display:none}
  body.focus-reading .reader-tools .mode-control{width:auto}
 }
+/* 2.3.1: title and controls share a row only when both fit the reader panel. */
+.reader-toolbar{flex-wrap:wrap}
+.doc-title-wrap{flex:1 1 220px;max-width:100%}
+.doc-title-wrap>div{flex:1;min-width:0}
+.doc-title-wrap strong{max-width:100%}
+.reader-controls{flex:0 1 auto;min-width:0;max-width:100%}
+@media(max-width:760px){.doc-title-wrap{flex:none;width:100%}}
 </style>
-  <title>ScientificGlossary Reader · 2.3.0</title>
+  <title>ScientificGlossary Reader · 2.3.1</title>
 </head>
 <body>
   <header class="topbar">
     <div class="brand"><div class="brand-mark" aria-hidden="true">S<span>·</span></div><div><strong>ScientificGlossary</strong><small>Научная читалка</small></div></div>
     <div class="top-actions">
       <button id="focusReaderBtn" type="button" class="btn btn-outline focus-toggle" aria-pressed="false" title="Скрыть библиотеку и глоссарий и увеличить PDF">Режим чтения</button>
-      <span id="offlineBadge" class="status"><i></i> <span id="offlineState">подготовка офлайн…</span> <span class="version">v2.3.0</span></span>
+      <span id="offlineBadge" class="status"><i></i> <span id="offlineState">подготовка офлайн…</span> <span class="version">v2.3.1</span></span>
       <button id="installBtn" class="btn btn-quiet hidden">Установить</button>
     </div>
   </header>
@@ -1739,7 +1746,7 @@ needle	игла; игольчатый электрод
 nanoemulsion	наноэмульсия
 
 </script><script>
-/* ScientificGlossary Reader v2.3.0 — direct phrase selection, other meanings, explicit source page */
+/* ScientificGlossary Reader v2.3.1 — direct phrase selection, other meanings, explicit source page */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -3607,7 +3614,7 @@ nanoemulsion	наноэмульсия
         });
       });
       await navigator.serviceWorker.ready;
-      const cache=await caches.open('scientific-glossary-shell-2.3.0');
+      const cache=await caches.open('scientific-glossary-shell-2.3.1');
       const manifestResponse=await cache.match(new URL('vendor/manifest.json',location.href));
       if(!manifestResponse)throw new Error('Offline installation incomplete');
       const manifest=await manifestResponse.json();
@@ -3638,7 +3645,7 @@ nanoemulsion	наноэмульсия
       for(const row of await dbAll('customDictionary')) if(row.term&&row.translation)dictionary.set(row.term,row.translation);
       for(const e of await dbAll('entries')) if(e.term&&e.translation)dictionary.set(normalizeTerm(e.term),e.translation);
       await refreshDocuments();await refreshGlossary();
-      $('readerHint').textContent='v2.3.0 · Нажмите слово или выделите фразу удержанием/протягиванием · Масштаб двумя пальцами · Проверяйте примеры по статье';
+      $('readerHint').textContent='v2.3.1 · Нажмите слово или выделите фразу удержанием/протягиванием · Масштаб двумя пальцами · Проверяйте примеры по статье';
       if((await dbAll('documents')).length) switchMobileView('read');
     } catch(error){console.error(error);showToast('Невозможно открыть локальное хранилище браузера.',7500);return;}
     const initialOpenSerial=documentOpenSerial;

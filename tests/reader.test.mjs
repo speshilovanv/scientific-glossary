@@ -43,8 +43,35 @@ test('tablet focus layout, bookmarks with notes and automatic offline resume', {
       p.drawText(`Bottom of page ${n}.`, { x: 30, y: 25, size: 16, font });
     }
     const bytes = Buffer.from(await pdf.save());
+    const filename = 'Heavy mineral-asphaltene interactions — experimental results and analysis.pdf';
     await page.goto(`http://127.0.0.1:${server.address().port}`); await ready();
-    await page.locator('#pdfInput').setInputFiles({ name: 'Reading.pdf', mimeType: 'application/pdf', buffer: bytes }); await painted(1);
+    await page.locator('#pdfInput').setInputFiles({ name: filename, mimeType: 'application/pdf', buffer: bytes }); await painted(1);
+    const checkToolbar = async () => {
+      const layout = await page.evaluate(() => {
+        const toolbar = document.querySelector('.reader-toolbar').getBoundingClientRect();
+        const title = document.querySelector('.doc-title-wrap'), controls = document.querySelector('.reader-controls');
+        const t = title.getBoundingClientRect(), c = controls.getBoundingClientRect();
+        const name = document.querySelector('#currentDocName').getBoundingClientRect();
+        const inside = r => r.left >= toolbar.left - 1 && r.right <= toolbar.right + 1 && r.top >= toolbar.top - 1 && r.bottom <= toolbar.bottom + 1;
+        return {
+          titleVisible: title.getClientRects().length > 0,
+          overlap: t.left < c.right - 1 && t.right > c.left + 1 && t.top < c.bottom - 1 && t.bottom > c.top + 1,
+          titleInside: inside(t) && name.left >= t.left - 1 && name.right <= t.right + 1,
+          controlsInside: inside(c) && [...controls.children].filter(e => e.getClientRects().length).every(e => inside(e.getBoundingClientRect())),
+          overflow: document.documentElement.scrollWidth > innerWidth + 1
+        };
+      });
+      if (layout.titleVisible) { assert.equal(layout.overlap, false, 'Tools must not overlap the article title'); assert.ok(layout.titleInside, 'Long title must stay inside its flex item'); }
+      assert.ok(layout.controlsInside, 'Every control stays inside the toolbar'); assert.equal(layout.overflow, false);
+    };
+    for (const width of [1440, 1280, 1180, 1100, 1051, 1024, 820, 761, 760, 390]) {
+      await page.setViewportSize({ width, height: 700 });
+      if (width <= 760) await page.locator('#mobileRead').click();
+      await checkToolbar();
+      if (width === 1180) await page.screenshot({ path: 'test-results/reader-toolbar-tablet.png', fullPage: true });
+    }
+    await page.setViewportSize({ width: 1024, height: 550 }); await painted(1);
+    passed.push('long article title and all toolbar controls remain separate across phone, tablet and desktop widths');
     await page.locator('#focusReaderBtn').click();
     await page.waitForFunction(() => document.querySelector('#pageFit').value === 'page' && document.querySelector('#pdfCanvas').clientHeight < 480);
     await painted(1);
@@ -56,6 +83,7 @@ test('tablet focus layout, bookmarks with notes and automatic offline resume', {
     assert.ok(bounds.canvas.top >= bounds.viewport.top && bounds.canvas.bottom <= bounds.viewport.bottom + 1, 'Whole PDF page fits vertically');
     assert.ok(bounds.canvas.left >= bounds.viewport.left && bounds.canvas.right <= bounds.viewport.right + 1, 'Whole PDF page fits horizontally');
     assert.equal(await page.locator('#readerTools').isVisible(), false);
+    await checkToolbar();
     await page.locator('#toast.show').waitFor({ state: 'hidden' });
     await page.screenshot({ path: 'test-results/reader-tablet-page.png', fullPage: true });
     passed.push('landscape tablet shows entire page with compact panels');
@@ -98,7 +126,7 @@ test('tablet focus layout, bookmarks with notes and automatic offline resume', {
     await page.locator('#closeBookmarks').click();
     passed.push('offline reload restores bookmarked PDF, page, zoom and reading position; note edits do not duplicate bookmarks');
 
-    await page.locator('#pdfInput').setInputFiles({ name: 'Reading.pdf', mimeType: 'application/pdf', buffer: bytes });
+    await page.locator('#pdfInput').setInputFiles({ name: filename, mimeType: 'application/pdf', buffer: bytes });
     await page.waitForFunction(() => !document.querySelector('#pdfInput').disabled);
     await painted(2);
     assert.equal(await page.locator('.document-item').count(), 1);
@@ -123,6 +151,7 @@ test('tablet focus layout, bookmarks with notes and automatic offline resume', {
     await page.locator('#pageFit').selectOption('page');
     await page.waitForFunction(() => { const c = document.querySelector('#pdfCanvas').getBoundingClientRect(), v = document.querySelector('#readerViewport').getBoundingClientRect(); return c.top >= v.top && c.bottom <= v.bottom + 1 && c.left >= v.left && c.right <= v.right + 1; });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+    await checkToolbar();
     await page.screenshot({ path: 'test-results/reader-phone-page.png', fullPage: true });
     await context.setOffline(false);
     passed.push('whole-page mode fits phone without horizontal overflow');
