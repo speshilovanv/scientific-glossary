@@ -287,6 +287,35 @@ test('Real PDF, storage, OCR, offline and 15-paper acceptance', { timeout: 90000
       }
       await writeFile('test-results/articles.json', JSON.stringify(articleResults, null, 2));
     });
+    await check('saved example retranslation, review reset and in-flight edit protection', async () => {
+      await page.locator('.glossary-item strong').filter({ hasText: /^Water$/ }).first().click();
+      await page.locator('#translationMode').selectOption('auto');
+      await page.locator('#exampleTranslationInput').fill('Сохранённый перевод');
+      await page.locator('#reviewedCheckbox').check();
+      await page.route('https://api.mymemory.translated.net/**', route => route.fulfill({ json: { responseStatus: 200, responseData: { translatedText: 'Новый перевод примера.' } } }));
+      await page.locator('#translateExampleBtn').click();
+      await page.waitForFunction(() => document.querySelector('#exampleTranslationInput').value === 'Новый перевод примера.');
+      assert.equal(await page.locator('#reviewedCheckbox').isChecked(), false);
+      await page.unroute('https://api.mymemory.translated.net/**');
+
+      let release, requested;
+      const received = new Promise(resolve => { requested = resolve; });
+      await page.route('https://api.mymemory.translated.net/**', async route => {
+        await new Promise(resolve => { release = resolve; requested(); });
+        await route.fulfill({ json: { responseStatus: 200, responseData: { translatedText: 'Запоздалый ответ.' } } });
+      });
+      await page.locator('#translateExampleBtn').click(); await received;
+      await page.locator('#exampleTranslationInput').fill('Моя ручная правка');
+      await page.locator('#reviewedCheckbox').check();
+      release();
+      await page.waitForFunction(() => !document.querySelector('#translateExampleBtn').disabled);
+      assert.equal(await page.locator('#exampleTranslationInput').inputValue(), 'Моя ручная правка');
+      assert.equal(await page.locator('#reviewedCheckbox').isChecked(), true);
+      assert.match(await page.locator('#exampleTranslationStatus').textContent(), /Ручная правка сохранена/);
+      await page.unroute('https://api.mymemory.translated.net/**');
+      await page.locator('#cancelTerm').click();
+      await page.locator('#translationMode').selectOption('offline');
+    });
     await check('complete offline installation, reload, import and real OCR', async () => {
       await page.evaluate(() => navigator.serviceWorker.ready);
       await page.waitForFunction(() => navigator.serviceWorker.controller);

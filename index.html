@@ -170,7 +170,7 @@ button:disabled{opacity:.36;cursor:not-allowed}
 @media(max-width:440px){.page-jump{padding:0 2px;gap:2px}.page-jump input{width:33px;min-width:27px;max-width:36px;font-size:13px}.page-jump span{font-size:11px}.reader-controls{gap:3px}}
 
 
-/* v2.0: concise dictionary senses, accessible selection and source-page correction. */
+/* v2.0.1: concise dictionary senses, accessible selection and source-page correction. */
 .meaning-panel{margin:13px 0 4px;border:1px solid #e2e8e2;border-radius:13px;background:#fbfcfa;padding:11px}
 .meaning-panel-head{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;margin-bottom:9px}
 .meaning-panel-head h3{margin:0;color:#283d34;font-size:13px;font-weight:700}
@@ -186,14 +186,14 @@ button:disabled{opacity:.36;cursor:not-allowed}
 .page-container.is-selecting{cursor:text}
 @media(max-width:760px){.meaning-panel{padding:10px}.meaning-panel-head{align-items:stretch}.source-page-edit input{min-width:60px}}
 </style>
-  <title>ScientificGlossary Reader · 2.0</title>
+  <title>ScientificGlossary Reader · 2.0.1</title>
 </head>
 <body>
   <header class="topbar">
     <div class="brand"><div class="brand-mark" aria-hidden="true">S<span>·</span></div><div><strong>ScientificGlossary</strong><small>Научная читалка</small></div></div>
     <div class="top-actions">
       <button id="focusReaderBtn" type="button" class="btn btn-outline focus-toggle" aria-pressed="false" title="Скрыть библиотеку и глоссарий и увеличить PDF">Режим чтения</button>
-      <span id="offlineBadge" class="status"><i></i> <span id="offlineState">подготовка офлайн…</span> <span class="version">v2.0</span></span>
+      <span id="offlineBadge" class="status"><i></i> <span id="offlineState">подготовка офлайн…</span> <span class="version">v2.0.1</span></span>
       <button id="installBtn" class="btn btn-quiet hidden">Установить</button>
     </div>
   </header>
@@ -1673,7 +1673,7 @@ needle	игла; игольчатый электрод
 nanoemulsion	наноэмульсия
 
 </script><script>
-/* ScientificGlossary Reader v2.0 — direct phrase selection, other meanings, explicit source page */
+/* ScientificGlossary Reader v2.0.1 — direct phrase selection, other meanings, explicit source page */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -2017,6 +2017,11 @@ nanoemulsion	наноэмульсия
     }
   }
   $('moreMeaningsBtn').addEventListener('click',requestDictionaryExamples);
+  function applySuggestedValue(field, value) {
+    if(field.value===value)return;
+    field.value=value;
+    $('reviewedCheckbox').checked=false;
+  }
   async function translateSelectedTerm(term, local, serial) {
     const key=normalizeTerm(term);
     if(currentTranslationMode()==='offline'){
@@ -2025,7 +2030,7 @@ nanoemulsion	наноэмульсия
       if(serial!==onlineRequestSerial || pendingTerm!==term || elements.modal.classList.contains('hidden'))return;
       if(saved?.translation){
         addTranslationOption('Из памяти устройства',saved.translation);
-        if(!local && !editingTranslationByUser)elements.translationInput.value=saved.translation;
+        if(!local && !editingTranslationByUser)applySuggestedValue(elements.translationInput,saved.translation);
       }
       elements.dictionaryStatus.textContent=local
         ? 'Офлайн-словарь — основной. Интернет-запросы выключены.'
@@ -2038,7 +2043,7 @@ nanoemulsion	наноэмульсия
     if(cached?.translation){
       addTranslationOption('Кэш онлайн',cached.translation);
       // Technical and user-authored meanings take precedence over machine output.
-      if(!local && !editingTranslationByUser)elements.translationInput.value=cached.translation;
+      if(!local && !editingTranslationByUser)applySuggestedValue(elements.translationInput,cached.translation);
       elements.dictionaryStatus.textContent=local
         ?'Локальный научный перевод выбран основным. Онлайн-вариант доступен для сравнения.'
         :'Перевод ранее получен онлайн и сохранён в кэше устройства.';
@@ -2054,7 +2059,7 @@ nanoemulsion	наноэмульсия
       if(local)addTranslationOption('Локально',local);
       addTranslationOption('MyMemory',translated);
       if(!local) { for (const val of meaningParts(translated)) addMeaningCard(val,'','','Вариант · MyMemory'); }
-      if(!local && !editingTranslationByUser)elements.translationInput.value=translated;
+      if(!local && !editingTranslationByUser)applySuggestedValue(elements.translationInput,translated);
       elements.dictionaryStatus.textContent=local
         ?'Научный словарь — основной; альтернативный перевод MyMemory доступен ниже. Проверьте значение.'
         :'Получен онлайн-перевод MyMemory · проверьте научный контекст.';
@@ -2072,6 +2077,9 @@ nanoemulsion	наноэмульсия
     if(!text){$('exampleTranslationStatus').textContent='Сначала укажите английское предложение из статьи.';return;}
     if(currentTranslationMode()==='offline'){$('exampleTranslationStatus').textContent='Режим «Только офлайн»: онлайн-перевод отключён.';return;}
     if(!internetCandidate()){$('exampleTranslationStatus').textContent='Нет интернета. Английский пример сохранён без изменений.';return;}
+    // An explicit request may replace a saved translation; edits made while
+    // this request is in flight still take precedence over its result.
+    editingExampleTranslationByUser=false;
     const before=pendingTerm;
     const serial=++exampleRequestSerial;
     const old=text;
@@ -2079,8 +2087,14 @@ nanoemulsion	наноэмульсия
     $('exampleTranslationStatus').textContent='Перевожу предложение через MyMemory…';
     try{
       const translated=await fetchWithTimeout(text,'example',8000);
-      if(serial!==exampleRequestSerial||pendingTerm!==before||elements.modal.classList.contains('hidden')||elements.exampleInput.value.trim()!==old)return;
-      if(!editingExampleTranslationByUser) $('exampleTranslationInput').value=translated;
+      if(serial!==exampleRequestSerial||pendingTerm!==before||elements.modal.classList.contains('hidden'))return;
+      if(elements.exampleInput.value.trim()!==old){
+        $('exampleTranslationStatus').textContent='Пример изменён. Повторите перевод для нового текста.';return;
+      }
+      if(editingExampleTranslationByUser){
+        $('exampleTranslationStatus').textContent='Ручная правка сохранена. Ответ переводчика не заменил ваш текст.';return;
+      }
+      applySuggestedValue($('exampleTranslationInput'),translated);
       $('exampleTranslationStatus').textContent='Перевод предложен MyMemory. Исходное английское предложение не изменено; проверьте точность.';
     }catch(e){
       if(serial!==exampleRequestSerial||elements.modal.classList.contains('hidden'))return;
@@ -2759,7 +2773,7 @@ nanoemulsion	наноэмульсия
     suggestions.replaceChildren();
     if(!existing && currentSelectedBox && !occurrence.phrase)for(const phrase of phraseSuggestions(currentSelectedBox)) {
       const b=document.createElement('button');b.type='button';b.className='phrase-chip';b.textContent=phrase;
-      b.addEventListener('click',()=>{pendingTerm=phrase;lastDictionaryTerm=null;++dictionaryRequestSerial;if(dictionaryRequestController)dictionaryRequestController.abort();elements.modalTerm.textContent=phrase;elements.translationInput.value=findTranslation(phrase);refreshMeaningExamples(phrase,findTranslation(phrase));updateExamplePreview();
+      b.addEventListener('click',()=>{pendingTerm=phrase;lastDictionaryTerm=null;++dictionaryRequestSerial;if(dictionaryRequestController)dictionaryRequestController.abort();elements.modalTerm.textContent=phrase;applySuggestedValue(elements.translationInput,findTranslation(phrase));$('reviewedCheckbox').checked=false;refreshMeaningExamples(phrase,findTranslation(phrase));updateExamplePreview();
         elements.dictionaryStatus.textContent='✓ Перевод словосочетания из локального словаря.';elements.dictionaryStatus.classList.remove('no-translation');suggestions.replaceChildren();
         if(onlineAbort)onlineAbort.abort();editingTranslationByUser=false;$('translationOptions').replaceChildren();
         addTranslationOption('Локально',findTranslation(phrase));
@@ -3225,7 +3239,7 @@ nanoemulsion	наноэмульсия
         });
       });
       await navigator.serviceWorker.ready;
-      const cache=await caches.open('scientific-glossary-shell-2.0.0-r2');
+      const cache=await caches.open('scientific-glossary-shell-2.0.1');
       const manifestResponse=await cache.match(new URL('vendor/manifest.json',location.href));
       if(!manifestResponse)throw new Error('Offline installation incomplete');
       const manifest=await manifestResponse.json();
@@ -3256,7 +3270,7 @@ nanoemulsion	наноэмульсия
       for(const row of await dbAll('customDictionary')) if(row.term&&row.translation)dictionary.set(row.term,row.translation);
       for(const e of await dbAll('entries')) if(e.term&&e.translation)dictionary.set(normalizeTerm(e.term),e.translation);
       await refreshDocuments();await refreshGlossary();
-      $('readerHint').textContent='v2.0 · Нажмите слово или выделите фразу удержанием/протягиванием · Проверяйте примеры по статье';
+      $('readerHint').textContent='v2.0.1 · Нажмите слово или выделите фразу удержанием/протягиванием · Проверяйте примеры по статье';
       if((await dbAll('documents')).length) switchMobileView('read');
     } catch(error){console.error(error);showToast('Невозможно открыть локальное хранилище браузера.',7500);return;}
     try {
