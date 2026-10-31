@@ -2333,6 +2333,7 @@ nanoemulsion	наноэмульсия
     if (!pdfDoc) return;
     // Cancel out-of-order visual updates caused by rapid page turning/zoom.
     const renderToken = ++activePageRender;
+    suppressClickUntil=0;
     ++ocrRunSerial;
     gesture=null; clearTimeout(touchHoldTimer); touchHold=null;
     elements.pageContainer.classList.remove('is-selecting');
@@ -2787,6 +2788,7 @@ nanoemulsion	наноэмульсия
   elements.exampleInput.addEventListener('input',()=>{$('reviewedCheckbox').checked=false;updateExamplePreview();});
 
   function closeTerm() {++exampleRequestSerial;++dictionaryRequestSerial;lastDictionaryTerm=null;if(dictionaryRequestController)dictionaryRequestController.abort();++onlineRequestSerial;if(onlineAbort)onlineAbort.abort();if(exampleAbort)exampleAbort.abort();
+    suppressClickUntil=0;
     elements.modal.classList.add('hidden'); pendingTerm = '';pendingEditId=null;pendingSource=null;currentSelectedBox=null;
     if (lastModalFocus?.focus) lastModalFocus.focus({preventScroll:true});lastModalFocus=null;
   }
@@ -2936,6 +2938,8 @@ nanoemulsion	наноэмульсия
         if(!row||typeof row.term!=='string'||typeof row.translation!=='string'||!row.term.trim()||!row.translation.trim())continue;
         const term=row.term.trim().slice(0,180),translation=row.translation.trim().slice(0,1500);
         const entry={id:typeof row.id==='string'&&row.id?row.id:makeId(),term,translation,example:String(row.example||'').slice(0,3000),exampleTranslation:String(row.exampleTranslation||'').slice(0,3000),sourceName:String(row.sourceName||'').slice(0,1000),sourceId:String(row.sourceId||'').slice(0,200),page:Number.isSafeInteger(row.page)&&row.page>0?row.page:0,reviewed:Boolean(row.reviewed)&&Boolean(termMatch(String(row.example||''),term)),createdAt:Number(row.createdAt)||Date.now()};
+        const fields=['term','translation','example','exampleTranslation','sourceId','page','reviewed'];
+        if([...byId.values()].some(previous=>fields.every(k=>(previous[k]??'')===(entry[k]??''))))continue;
         const previous=byId.get(entry.id);
         if(previous){
           if(['term','translation','example','exampleTranslation','sourceId','page','reviewed'].every(k=>(previous[k]??'')===(entry[k]??'')))continue;
