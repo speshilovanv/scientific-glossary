@@ -68,8 +68,8 @@ test('tablet focus layout, bookmarks with notes and automatic offline resume', {
       return { top, bottom };
     });
     assert.ok(edges.top >= 0 && edges.top <= 10, 'Top edge is reachable'); assert.ok(Math.abs(edges.bottom) <= 10, 'Bottom edge is reachable');
-    await page.locator('#readerToolsToggle').click(); assert.equal(await page.locator('#readerTools').isVisible(), true);
-    await page.locator('#readerToolsToggle').click(); assert.equal(await page.locator('#readerTools').isVisible(), false);
+    await page.locator('#readerToolsToggle').click(); await painted(1); assert.equal(await page.locator('#readerTools').isVisible(), true);
+    await page.locator('#readerToolsToggle').click(); await painted(1); assert.equal(await page.locator('#readerTools').isVisible(), false);
     passed.push('width mode scrolls from first to last line; tools open explicitly');
 
     await jump(2);
