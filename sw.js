@@ -1,5 +1,5 @@
 /* ScientificGlossary 2.0: complete versioned offline installation. */
-const SHELL_CACHE = 'scientific-glossary-shell-2.0.0-r1';
+const SHELL_CACHE = 'scientific-glossary-shell-2.0.0-r2';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './assets/icon.svg', './assets/icon-192.png', './assets/icon-512.png', './vendor/manifest.json'];
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
@@ -7,10 +7,10 @@ self.addEventListener('install', event => {
     const response = await fetch('./vendor/manifest.json', { cache: 'no-store' });
     if (!response.ok) throw new Error('Offline manifest unavailable');
     const manifest = await response.json();
-    await cache.addAll(SHELL);
+    await cache.addAll(SHELL.map(path => new Request(path, { cache: 'reload' })));
     // Activate only when all components are saved. Previous install survives a failure.
     for (let i = 0; i < manifest.files.length; i += 12) {
-      await cache.addAll(manifest.files.slice(i, i + 12).map(file => './' + file.path));
+      await cache.addAll(manifest.files.slice(i, i + 12).map(file => new Request('./' + file.path, { cache: 'reload' })));
     }
     await self.skipWaiting();
   })());
