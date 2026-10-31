@@ -186,7 +186,7 @@ button:disabled{opacity:.36;cursor:not-allowed}
 .page-container.is-selecting{cursor:text}
 @media(max-width:760px){.meaning-panel{padding:10px}.meaning-panel-head{align-items:stretch}.source-page-edit input{min-width:60px}}
 </style>
-  <title>ScientificGlossary Reader · 1.9</title>
+  <title>ScientificGlossary Reader · 2.0</title>
 </head>
 <body>
   <header class="topbar">
@@ -3225,7 +3225,7 @@ nanoemulsion	наноэмульсия
         });
       });
       await navigator.serviceWorker.ready;
-      const cache=await caches.open('scientific-glossary-shell-2.0.0');
+      const cache=await caches.open('scientific-glossary-shell-2.0.0-r1');
       const manifestResponse=await cache.match(new URL('vendor/manifest.json',location.href));
       if(!manifestResponse)throw new Error('Offline installation incomplete');
       const manifest=await manifestResponse.json();
