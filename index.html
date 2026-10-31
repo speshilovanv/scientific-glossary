@@ -170,7 +170,7 @@ button:disabled{opacity:.36;cursor:not-allowed}
 @media(max-width:440px){.page-jump{padding:0 2px;gap:2px}.page-jump input{width:33px;min-width:27px;max-width:36px;font-size:13px}.page-jump span{font-size:11px}.reader-controls{gap:3px}}
 
 
-/* v2.2.1: concise dictionary senses, accessible selection and source-page correction. */
+/* v2.3.0: concise dictionary senses, accessible selection and source-page correction. */
 .meaning-panel{margin:13px 0 4px;border:1px solid #e2e8e2;border-radius:13px;background:#fbfcfa;padding:11px}
 .meaning-panel-head{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;margin-bottom:9px}
 .meaning-panel-head h3{margin:0;color:#283d34;font-size:13px;font-weight:700}
@@ -190,7 +190,8 @@ button:disabled{opacity:.36;cursor:not-allowed}
 .app-shell{min-height:0}
 .reader-toolbar,.reader-tools,.reader-footer{flex-shrink:0}
 .reader-controls{flex-wrap:wrap;justify-content:flex-end}
-.reader-viewport{display:block;text-align:left}
+.reader-viewport{display:block;text-align:left;touch-action:pan-x pan-y}
+.page-container[data-pinching="true"]{will-change:transform}
 .page-wrap{display:block;flex:none;width:max-content;min-width:0;margin:0 auto}
 .welcome-card{margin:clamp(24px,7vh,70px) auto}
 .reader-fit{min-height:40px;max-width:135px;padding:5px 7px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);font-size:12px}
@@ -237,14 +238,14 @@ body.focus-reading #readerToolsToggle{display:inline-grid}
  body.focus-reading .reader-tools .mode-control{width:auto}
 }
 </style>
-  <title>ScientificGlossary Reader · 2.2.1</title>
+  <title>ScientificGlossary Reader · 2.3.0</title>
 </head>
 <body>
   <header class="topbar">
     <div class="brand"><div class="brand-mark" aria-hidden="true">S<span>·</span></div><div><strong>ScientificGlossary</strong><small>Научная читалка</small></div></div>
     <div class="top-actions">
       <button id="focusReaderBtn" type="button" class="btn btn-outline focus-toggle" aria-pressed="false" title="Скрыть библиотеку и глоссарий и увеличить PDF">Режим чтения</button>
-      <span id="offlineBadge" class="status"><i></i> <span id="offlineState">подготовка офлайн…</span> <span class="version">v2.2.1</span></span>
+      <span id="offlineBadge" class="status"><i></i> <span id="offlineState">подготовка офлайн…</span> <span class="version">v2.3.0</span></span>
       <button id="installBtn" class="btn btn-quiet hidden">Установить</button>
     </div>
   </header>
@@ -1738,7 +1739,7 @@ needle	игла; игольчатый электрод
 nanoemulsion	наноэмульсия
 
 </script><script>
-/* ScientificGlossary Reader v2.2.1 — direct phrase selection, other meanings, explicit source page */
+/* ScientificGlossary Reader v2.3.0 — direct phrase selection, other meanings, explicit source page */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -1788,6 +1789,8 @@ nanoemulsion	наноэмульсия
   let latestSuggestion = null;
   let renderedSource = null; // The page actually painted on the canvas (not the page currently requested).
   let gesture = null;
+  let pinchGesture = null;
+  let pinchWaitingForRelease = false;
   let suppressClickUntil = 0;
   let touchHoldTimer = null;
   let dictionaryRequestSerial = 0;
@@ -2298,6 +2301,7 @@ nanoemulsion	наноэмульсия
       del.addEventListener('click',async e=>{
         e.stopPropagation();
         if(!confirm('Удалить PDF и его закладки из библиотеки? Записи глоссария сохранятся.')) return;
+        if(currentDoc?.id===doc.id)clearPinchPreview();
         await dbDelete('documents',doc.id);
         try{localStorage.removeItem('sg-page-'+doc.id);localStorage.removeItem('sg-progress-'+doc.id);if(localStorage.getItem('sg-last-document')===doc.id)localStorage.removeItem('sg-last-document');}catch(_){}
         if(currentDoc?.id===doc.id){++documentOpenSerial;++activePageRender;++ocrRunSerial;readerReady=false;renderedSource=null;pageWordBoxes=[];if(currentRenderTask)currentRenderTask.cancel();const closed=pdfDoc;currentDoc=null;pdfDoc=null;if(closed)await closed.destroy();clearNativePdf();elements.prevPage.disabled=true;elements.nextPage.disabled=true;$('pageJump').disabled=true;elements.pageCounter.textContent='— / —';$('pageCountLabel').textContent='/ —';elements.welcome.classList.remove('hidden');elements.pageWrap.classList.add('hidden');elements.currentDocName.textContent='Документ не открыт';elements.pageInfo.textContent='Добавьте PDF';updateBookmarkButton();}
@@ -2416,7 +2420,7 @@ nanoemulsion	наноэмульсия
     elements.textLayer.style.display='';elements.highlights.style.display='';
   }
   function showNativePdf(doc){
-    clearNativePdf();
+    clearNativePdf();clearPinchPreview();
     readerReady=false;pageWordBoxes=[];pdfDoc=null;currentDoc=doc;
     $('bookmarksBtn').disabled=true;
     elements.currentDocName.textContent=doc.name;
@@ -2435,6 +2439,7 @@ nanoemulsion	наноэмульсия
     switchMobileView('read');
   }
   async function openDocument(id, options={}) {
+    clearPinchPreview();
     readerReady = false;
     $('bookmarksBtn').disabled=true;
     ++activePageRender; ++ocrRunSerial;
@@ -2497,6 +2502,7 @@ nanoemulsion	наноэмульсия
   $('pageJump').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();jumpToPage();e.target.blur();}});
 
   async function renderPage(restorePosition=null) {
+    clearPinchPreview();
     const position=restorePosition || (readerReady&&renderedSource?.id===currentDoc?.id&&renderedSource?.page===currentPage?captureReadingPosition():null);
     readerReady = false;
     $('bookmarksBtn').disabled=true;
@@ -3080,6 +3086,9 @@ nanoemulsion	наноэмульсия
       left:viewport.scrollLeft/Math.max(1,viewport.scrollWidth-viewport.clientWidth)};
   }
   function restoreReadingPosition(position){
+    if(position.pinchAnchor){
+      restorePinchAnchor(position.pinchAnchor);return;
+    }
     const ratio=value=>Number.isFinite(value)?Math.max(0,Math.min(1,value)):0;
     elements.viewport.scrollTop=ratio(position.top)*Math.max(0,elements.viewport.scrollHeight-elements.viewport.clientHeight);
     elements.viewport.scrollLeft=ratio(position.left)*Math.max(0,elements.viewport.scrollWidth-elements.viewport.clientWidth);
@@ -3414,9 +3423,100 @@ nanoemulsion	наноэмульсия
     }
   });
   elements.pageContainer.addEventListener('pointercancel',()=>{gesture=null;});
+  // Two-finger zoom is handled only inside the PDF viewport. Single-finger
+  // panning remains native; a held single finger still selects words.
+  function clearPinchPreview(){
+    if(!pinchGesture)return;
+    if(pinchGesture.frame)cancelAnimationFrame(pinchGesture.frame);
+    pinchGesture=null;
+    elements.pageContainer.style.transform='';
+    elements.pageContainer.style.transformOrigin='';
+    delete elements.pageContainer.dataset.pinching;
+    elements.pageWrap.style.width='';elements.pageWrap.style.height='';
+  }
+  function restorePinchAnchor(anchor){
+    const rect=elements.pageContainer.getBoundingClientRect();
+    const view=elements.viewport.getBoundingClientRect();
+    const x=Math.max(view.left,Math.min(view.right,anchor.clientX));
+    const y=Math.max(view.top,Math.min(view.bottom,anchor.clientY));
+    elements.viewport.scrollLeft+=rect.left+anchor.x*rect.width-x;
+    elements.viewport.scrollTop+=rect.top+anchor.y*rect.height-y;
+  }
+  function pinchTouches(event,state){
+    const touches=Array.from(event.touches);
+    return state?state.ids.map(id=>touches.find(t=>t.identifier===id)):touches.slice(0,2);
+  }
+  function previewPinch(){
+    const state=pinchGesture;if(!state)return;
+    state.frame=0;
+    if(state.documentId!==currentDoc?.id||state.page!==currentPage||state.render!==activePageRender){clearPinchPreview();return;}
+    const factor=state.targetZoom/state.zoom;
+    elements.pageWrap.style.width=state.width*factor+'px';
+    elements.pageWrap.style.height=state.height*factor+'px';
+    elements.pageContainer.style.transformOrigin='0 0';
+    elements.pageContainer.style.transform=`scale(${factor})`;
+    restorePinchAnchor(state.anchor);
+    elements.zoomValue.textContent=Math.round(state.targetZoom*100)+'%';
+  }
+  function finishPinch(){
+    const state=pinchGesture;if(!state)return;
+    if(state.frame)cancelAnimationFrame(state.frame);
+    previewPinch();
+    const valid=state.documentId===currentDoc?.id&&state.page===currentPage&&state.render===activePageRender;
+    clearPinchPreview();
+    suppressClickUntil=Date.now()+650;
+    if(!valid)return;
+    zoom=state.targetZoom;
+    // Rasterize once after the gesture for sharp text and fresh hit geometry.
+    void renderPage({pinchAnchor:state.anchor}).then(()=>{
+      suppressClickUntil=Math.max(suppressClickUntil,Date.now()+650);
+    }).catch(error=>console.warn('Pinch redraw failed',error));
+  }
+  elements.viewport.addEventListener('touchstart',event=>{
+    if(event.touches.length<2){if(pinchWaitingForRelease&&event.cancelable)event.preventDefault();return;}
+    if(!pdfDoc)return;
+    if(event.cancelable)event.preventDefault();
+    if(pinchGesture||!readerReady)return;
+    clearTimeout(touchHoldTimer);touchHold=null;gesture=null;
+    elements.pageContainer.classList.remove('is-selecting');elements.highlights.replaceChildren();
+    phraseMode=false;phraseStart=null;elements.phraseButton.classList.remove('btn-primary');elements.phraseButton.setAttribute('aria-pressed','false');
+    const [first,second]=pinchTouches(event);
+    const rect=elements.pageContainer.getBoundingClientRect();
+    const clientX=(first.clientX+second.clientX)/2,clientY=(first.clientY+second.clientY)/2;
+    pinchGesture={ids:[first.identifier,second.identifier],documentId:currentDoc.id,page:currentPage,render:activePageRender,
+      distance:Math.max(16,Math.hypot(second.clientX-first.clientX,second.clientY-first.clientY)),
+      zoom,targetZoom:zoom,width:elements.canvas.clientWidth,height:elements.canvas.clientHeight,frame:0,
+      anchor:{x:Math.max(0,Math.min(1,(clientX-rect.left)/rect.width)),y:Math.max(0,Math.min(1,(clientY-rect.top)/rect.height)),clientX,clientY}};
+    pinchWaitingForRelease=true;readerReady=false;++ocrRunSerial;
+    $('bookmarksBtn').disabled=true;$('pageJump').disabled=true;
+    elements.pageContainer.dataset.pinching='true';
+  },{passive:false,capture:true});
+  elements.viewport.addEventListener('touchmove',event=>{
+    const state=pinchGesture;
+    if(!state){if(pinchWaitingForRelease&&event.cancelable)event.preventDefault();return;}
+    if(event.cancelable)event.preventDefault();
+    const [first,second]=pinchTouches(event,state);
+    if(!first||!second){finishPinch();return;}
+    const ratio=Math.hypot(second.clientX-first.clientX,second.clientY-first.clientY)/state.distance;
+    state.targetZoom=Math.max(.55,Math.min(2.5,state.zoom*ratio));
+    state.anchor.clientX=(first.clientX+second.clientX)/2;state.anchor.clientY=(first.clientY+second.clientY)/2;
+    if(!state.frame)state.frame=requestAnimationFrame(previewPinch);
+  },{passive:false,capture:true});
+  elements.viewport.addEventListener('touchend',event=>{
+    if(!pinchGesture&&!pinchWaitingForRelease)return;
+    if(event.cancelable)event.preventDefault();
+    if(pinchGesture&&pinchTouches(event,pinchGesture).some(t=>!t))finishPinch();
+    pinchWaitingForRelease=event.touches.length>0;
+    suppressClickUntil=Math.max(suppressClickUntil,Date.now()+650);
+  },{passive:false,capture:true});
+  elements.viewport.addEventListener('touchcancel',event=>{
+    if(!pinchGesture&&!pinchWaitingForRelease)return;
+    if(event.cancelable)event.preventDefault();
+    finishPinch();pinchWaitingForRelease=false;
+  },{passive:false,capture:true});
   let touchHold=null;
   elements.pageContainer.addEventListener('touchstart',e=>{
-    if(!pdfDoc||!readerReady||e.touches.length!==1)return;
+    if(pinchWaitingForRelease||pinchGesture||!pdfDoc||!readerReady||e.touches.length!==1)return;
     const t=e.touches[0],w=wordFromClient(t.clientX,t.clientY);
     if(!w)return;
     touchHold={first:w,last:w,x:t.clientX,y:t.clientY,active:false};
@@ -3454,7 +3554,7 @@ nanoemulsion	наноэмульсия
   elements.pageContainer.addEventListener('touchcancel',()=>{clearTimeout(touchHoldTimer);touchHold=null;elements.pageContainer.classList.remove('is-selecting');});
   // Click positions are matched against PDF character geometry, not HTML overlays.
   elements.pageContainer.addEventListener('click',e=>{
-    if(Date.now()<suppressClickUntil)return;
+    if(pinchGesture||pinchWaitingForRelease||Date.now()<suppressClickUntil)return;
     if(!pdfDoc||!readerReady)return;
     const rect=elements.pageContainer.getBoundingClientRect();
     const word=wordAtPagePoint(e.clientX-rect.left,e.clientY-rect.top);
@@ -3507,7 +3607,7 @@ nanoemulsion	наноэмульсия
         });
       });
       await navigator.serviceWorker.ready;
-      const cache=await caches.open('scientific-glossary-shell-2.2.1');
+      const cache=await caches.open('scientific-glossary-shell-2.3.0');
       const manifestResponse=await cache.match(new URL('vendor/manifest.json',location.href));
       if(!manifestResponse)throw new Error('Offline installation incomplete');
       const manifest=await manifestResponse.json();
@@ -3538,7 +3638,7 @@ nanoemulsion	наноэмульсия
       for(const row of await dbAll('customDictionary')) if(row.term&&row.translation)dictionary.set(row.term,row.translation);
       for(const e of await dbAll('entries')) if(e.term&&e.translation)dictionary.set(normalizeTerm(e.term),e.translation);
       await refreshDocuments();await refreshGlossary();
-      $('readerHint').textContent='v2.2.1 · Нажмите слово или выделите фразу удержанием/протягиванием · Проверяйте примеры по статье';
+      $('readerHint').textContent='v2.3.0 · Нажмите слово или выделите фразу удержанием/протягиванием · Масштаб двумя пальцами · Проверяйте примеры по статье';
       if((await dbAll('documents')).length) switchMobileView('read');
     } catch(error){console.error(error);showToast('Невозможно открыть локальное хранилище браузера.',7500);return;}
     const initialOpenSerial=documentOpenSerial;

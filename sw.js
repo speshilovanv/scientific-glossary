@@ -1,5 +1,5 @@
-/* ScientificGlossary 2.2.1: complete versioned offline installation. */
-const SHELL_CACHE = 'scientific-glossary-shell-2.2.1';
+/* ScientificGlossary 2.3.0: complete versioned offline installation. */
+const SHELL_CACHE = 'scientific-glossary-shell-2.3.0';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './assets/icon.svg', './assets/icon-192.png', './assets/icon-512.png', './vendor/manifest.json'];
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
