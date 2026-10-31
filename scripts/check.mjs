@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 const html = await readFile('index.html', 'utf8');
 const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
 assert.equal(ids.length, new Set(ids).size, 'Duplicate HTML IDs');
-for (const id of ['pageJump', 'qualityFilter', 'reviewedCheckbox', 'exportDocBtn', 'pdfInput']) assert.ok(ids.includes(id));
+for (const id of ['pageJump', 'qualityFilter', 'reviewedCheckbox', 'exportDocBtn', 'pdfInput', 'pageFit', 'bookmarksBtn', 'bookmarkDialog', 'readerToolsToggle']) assert.ok(ids.includes(id));
 const scripts = [...html.matchAll(/<script>\s*([\s\S]*?)<\/script>/g)];
 assert.equal(scripts.length, 2);
 for (const [i, script] of scripts.entries()) new vm.Script(script[1], { filename: `embedded-${i}.js` });
