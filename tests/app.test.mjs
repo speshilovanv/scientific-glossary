@@ -27,7 +27,8 @@ const errors = [], results = [];
 const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, acceptDownloads: true });
 const page = await context.newPage();
 page.on('pageerror', error => errors.push(error.message));
-page.on('dialog', dialog => dialog.accept(dialog.type()==='prompt'?'area':undefined));
+let manualTermValue = 'area';
+page.on('dialog', dialog => dialog.accept(dialog.type()==='prompt'?manualTermValue:undefined));
 const check = async (name, fn) => { await fn(); results.push(name); console.log('PASS', name); };
 async function ready(p = page) {
   await p.waitForFunction(() => window.pdfjsLib && document.querySelector('#documentsList .empty-small, #documentsList .document-item'));
@@ -357,6 +358,36 @@ test('Real PDF, storage, OCR, offline and 15-paper acceptance', { timeout: 90000
       await page.screenshot({ path: 'test-results/mobile.png', fullPage: true });
       await page.setViewportSize({ width: 1440, height: 1000 });
       await page.screenshot({ path: 'test-results/desktop.png', fullPage: true });
+    });
+    await check('broad offline vocabulary covers screenshot words and inflections', async () => {
+      await context.setOffline(true);
+      await page.locator('#translationMode').selectOption('offline');
+      for (const word of ['concepts', 'scheduler', 'dynamics', 'hydraulics', 'pipeline', 'controllers', 'specifications', 'hypotheses', 'children', 'running', 'concept’s']) {
+        manualTermValue = word; await page.locator('#manualTerm').click();
+        await page.locator('#termModal:not(.hidden)').waitFor();
+        const value = await page.locator('#translationInput').inputValue();
+        assert.match(value, /[А-Яа-яЁё]/, `Offline translation for ${word}`);
+        if (word === 'concepts') assert.match(value, /понятие|концепция/);
+        const external = new URL(await page.locator('#externalTranslate').getAttribute('href'));
+        assert.equal(external.hostname, 'translate.google.com'); assert.equal(external.searchParams.get('text'), word);
+        await page.locator('#cancelTerm').click();
+      }
+      await context.setOffline(false);
+    });
+    await check('alternate word provider, attribution and offline reuse after MyMemory failure', async () => {
+      await page.route('https://api.mymemory.translated.net/**', route => route.fulfill({ status: 503, body: 'unavailable' }));
+      await page.route('https://en.wiktionary.org/w/api.php**', route => route.fulfill({ json: { parse: { wikitext: { '*': '==English==\n* Russian: {{t+|ru|резервный тестовый перевод}}\n==German==\n{{t|ru|неверный раздел}}' } } } }));
+      await page.locator('#translationMode').selectOption('auto');
+      manualTermValue = 'qzxvunknown'; await page.locator('#manualTerm').click();
+      await page.waitForFunction(() => document.querySelector('#translationInput').value === 'резервный тестовый перевод');
+      assert.match(await page.locator('#dictionaryStatus').textContent(), /Wiktionary/);
+      assert.equal(await page.locator('#translationOptions a').getAttribute('href'), 'https://en.wiktionary.org/wiki/qzxvunknown');
+      await page.locator('#cancelTerm').click();
+      await page.unroute('https://api.mymemory.translated.net/**'); await page.unroute('https://en.wiktionary.org/w/api.php**');
+      await context.setOffline(true); await page.locator('#translationMode').selectOption('offline');
+      await page.locator('#manualTerm').click();
+      await page.waitForFunction(() => document.querySelector('#translationInput').value === 'резервный тестовый перевод');
+      await page.locator('#cancelTerm').click(); await context.setOffline(false); manualTermValue = 'area';
     });
     await check('deleting an open PDF keeps glossary entries and clears navigation', async()=>{
       const count=await page.locator('#entryCount').textContent();

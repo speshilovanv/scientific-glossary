@@ -1,0 +1,10 @@
+{
+  "name": "WikDict / FreeDict English–Russian",
+  "edition": "2025.11.23",
+  "source": "https://download.freedict.org/dictionaries/eng-rus/2025.11.23/freedict-eng-rus-2025.11.23.src.tar.xz",
+  "source_sha512": "fdee5ebdbe59c2a4293b875def3befdfddd990f95ecd10eb289eff22d815ed6d31267ca4695af66811ef368dd72b16342210475e044c995831e7931ce0e4bcfe",
+  "entries": 56836,
+  "license": "CC BY-SA 3.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+  "modifications": "TEI Russian translations flattened to lowercase TSV; stress marks removed; affixes excluded; duplicate meanings merged."
+}
