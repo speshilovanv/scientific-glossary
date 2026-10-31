@@ -3149,6 +3149,7 @@ nanoemulsion	наноэмульсия
   $('saveBookmark').addEventListener('click',async()=>{
     if(bookmarkSaving||!bookmarkDraft)return;
     bookmarkSaving=true;$('saveBookmark').disabled=true;
+    $('bookmarkFeedback').textContent='Сохраняю место чтения…';
     const place={...bookmarkDraft},note=$('bookmarkNote').value.trim().slice(0,2000);
     try{
       const doc=await dbGet('documents',place.documentId);if(!doc)throw new Error('PDF уже удалён.');

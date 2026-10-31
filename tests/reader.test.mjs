@@ -56,6 +56,7 @@ test('tablet focus layout, bookmarks with notes and automatic offline resume', {
     assert.ok(bounds.canvas.top >= bounds.viewport.top && bounds.canvas.bottom <= bounds.viewport.bottom + 1, 'Whole PDF page fits vertically');
     assert.ok(bounds.canvas.left >= bounds.viewport.left && bounds.canvas.right <= bounds.viewport.right + 1, 'Whole PDF page fits horizontally');
     assert.equal(await page.locator('#readerTools').isVisible(), false);
+    await page.locator('#toast.show').waitFor({ state: 'hidden' });
     await page.screenshot({ path: 'test-results/reader-tablet-page.png', fullPage: true });
     passed.push('landscape tablet shows entire page with compact panels');
 
@@ -80,6 +81,7 @@ test('tablet focus layout, bookmarks with notes and automatic offline resume', {
     await page.locator('#saveBookmark').click();
     await page.waitForFunction(() => document.querySelector('#bookmarkFeedback').textContent.startsWith('Место сохранено'));
     assert.equal(await page.locator('.bookmark-item').count(), 1);
+    await page.locator('#toast.show').waitFor({ state: 'hidden' });
     await page.screenshot({ path: 'test-results/bookmark-note.png', fullPage: true });
     await page.locator('#closeBookmarks').click();
     await jump(3);
