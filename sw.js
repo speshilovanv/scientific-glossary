@@ -1,6 +1,6 @@
-/* ScientificGlossary Reader 1.8 — offline application shell. */
-const SHELL_CACHE = 'scientific-glossary-shell-1.8.0';
-const VENDOR_CACHE = 'scientific-glossary-vendor-1.8.0';
+/* ScientificGlossary Reader 1.9 — offline application shell. */
+const SHELL_CACHE = 'scientific-glossary-shell-1.9.0';
+const VENDOR_CACHE = 'scientific-glossary-vendor-1.9.0';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './assets/icon.svg', './assets/icon-192.png', './assets/icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
