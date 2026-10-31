@@ -214,7 +214,7 @@ test('Real PDF, storage, OCR, offline and 15-paper acceptance', { timeout: 90000
       await page.locator('#manualTerm').click();
       await page.locator('#termModal:not(.hidden)').waitFor();
       assert.equal(await page.locator('#modalTerm').textContent(),'area');
-      await page.locator('#meaningExamples').getByRole('button',{name:'площадь',exact:true}).click();
+      await page.locator('.meaning-card').filter({has:page.getByText('площадь',{exact:true})}).getByRole('button',{name:'Выбрать',exact:true}).click();
       assert.equal(await page.locator('#translationInput').inputValue(),'площадь');
       await page.locator('#exampleInput').fill('');
       await page.locator('#reviewedCheckbox').check(); await page.locator('#saveTerm').click();
