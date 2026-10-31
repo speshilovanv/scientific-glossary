@@ -1,0 +1,27 @@
+name: Bundle local PDF and OCR components
+on:
+  push:
+    branches: [release/v2.0.0]
+permissions:
+  contents: write
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts --omit=optional
+      - run: npm run vendor
+      - run: npm run check
+      - name: Commit reproducible local components to the release branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add vendor
+          if ! git diff --cached --quiet; then
+            git commit -m 'Bundle pinned PDF.js, OCR engine and English recognition data'
+            git push origin HEAD:release/v2.0.0
+          fi

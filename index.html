@@ -170,7 +170,7 @@ button:disabled{opacity:.36;cursor:not-allowed}
 @media(max-width:440px){.page-jump{padding:0 2px;gap:2px}.page-jump input{width:33px;min-width:27px;max-width:36px;font-size:13px}.page-jump span{font-size:11px}.reader-controls{gap:3px}}
 
 
-/* v1.9: concise dictionary senses, accessible selection and source-page correction. */
+/* v2.0: concise dictionary senses, accessible selection and source-page correction. */
 .meaning-panel{margin:13px 0 4px;border:1px solid #e2e8e2;border-radius:13px;background:#fbfcfa;padding:11px}
 .meaning-panel-head{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;margin-bottom:9px}
 .meaning-panel-head h3{margin:0;color:#283d34;font-size:13px;font-weight:700}
@@ -193,7 +193,7 @@ button:disabled{opacity:.36;cursor:not-allowed}
     <div class="brand"><div class="brand-mark" aria-hidden="true">S<span>·</span></div><div><strong>ScientificGlossary</strong><small>Научная читалка</small></div></div>
     <div class="top-actions">
       <button id="focusReaderBtn" type="button" class="btn btn-outline focus-toggle" aria-pressed="false" title="Скрыть библиотеку и глоссарий и увеличить PDF">Режим чтения</button>
-      <span id="offlineBadge" class="status"><i></i> данные на устройстве <span class="version">v1.9</span></span>
+      <span id="offlineBadge" class="status"><i></i> <span id="offlineState">подготовка офлайн…</span> <span class="version">v2.0</span></span>
       <button id="installBtn" class="btn btn-quiet hidden">Установить</button>
     </div>
   </header>
@@ -238,7 +238,7 @@ button:disabled{opacity:.36;cursor:not-allowed}
           <button id="zoomIn" class="icon-btn" title="Увеличить" aria-label="Увеличить масштаб">+</button>
         </div>
       </div>
-      <div class="reader-tools"><button id="ocrBtn" class="btn btn-outline" title="Распознать скан. Первый запуск требует интернет.">OCR скана</button><button id="columnJump" class="btn btn-outline hidden" title="Перейти к другой половине страницы PDF">⇄ Колонка</button><label class="mode-control" for="translationMode"><span>Перевод</span><select id="translationMode" aria-label="Режим перевода"><option value="auto">Авто · онлайн / офлайн</option><option value="offline">Только офлайн</option></select></label><button id="checkTranslationBtn" class="btn btn-outline" type="button" title="Проверить MyMemory без отправки PDF">Проверить перевод</button><span id="providerStatus" class="provider-status" role="status" aria-live="polite"></span><button id="selectPhraseBtn" class="btn btn-outline" title="Отметьте первое и последнее слово фразы" aria-pressed="false">Выделить фразу</button><button id="moreReaderTools" type="button" class="btn btn-outline" aria-expanded="false">Ещё инструменты</button><span id="ocrStatus" aria-live="polite">Нажмите на слово в PDF</span></div>
+      <div class="reader-tools"><button id="ocrBtn" class="btn btn-outline" title="Распознать английский текст скана на устройстве">OCR скана</button><button id="columnJump" class="btn btn-outline hidden" title="Перейти к другой половине страницы PDF">⇄ Колонка</button><label class="mode-control" for="translationMode"><span>Перевод</span><select id="translationMode" aria-label="Режим перевода"><option value="auto">Авто · онлайн / офлайн</option><option value="offline">Только офлайн</option></select></label><button id="checkTranslationBtn" class="btn btn-outline" type="button" title="Проверить MyMemory без отправки PDF">Проверить перевод</button><span id="providerStatus" class="provider-status" role="status" aria-live="polite"></span><button id="selectPhraseBtn" class="btn btn-outline" title="Отметьте первое и последнее слово фразы" aria-pressed="false">Выделить фразу</button><button id="moreReaderTools" type="button" class="btn btn-outline" aria-expanded="false">Ещё инструменты</button><span id="ocrStatus" aria-live="polite">Нажмите на слово в PDF</span></div>
       <div id="readerViewport" class="reader-viewport">
         <div id="welcome" class="welcome-card">
           <div class="welcome-illustration" aria-hidden="true">▤</div>
@@ -293,7 +293,7 @@ button:disabled{opacity:.36;cursor:not-allowed}
 (() => {
   'use strict';
   const enc = new TextEncoder();
-  const xml = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
+  const xml = value => String(value ?? '').replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
   const p = (value, bold=false) => `<w:p><w:pPr><w:spacing w:after="80"/></w:pPr><w:r>${bold?'<w:rPr><w:b/></w:rPr>':''}<w:t xml:space="preserve">${xml(value).replace(/\n/g,'</w:t><w:br/><w:t xml:space="preserve">')}</w:t></w:r></w:p>`;
   const cell = (value, width, bold=false) => `<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="dxa"/><w:tcBorders><w:bottom w:val="single" w:sz="3"/><w:right w:val="single" w:sz="3"/></w:tcBorders></w:tcPr>${p(value,bold)}</w:tc>`;
   const row = (cols, header=false) => `<w:tr><w:trPr>${header?'<w:tblHeader w:val="true"/>':''}<w:cantSplit/></w:trPr>${cols.map((v,i)=>cell(v,[500,2100,2400,5800,2600][i],header)).join('')}</w:tr>`;
@@ -1673,7 +1673,7 @@ needle	игла; игольчатый электрод
 nanoemulsion	наноэмульсия
 
 </script><script>
-/* ScientificGlossary Reader v1.9 — direct phrase selection, other meanings, explicit source page */
+/* ScientificGlossary Reader v2.0 — direct phrase selection, other meanings, explicit source page */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -1682,7 +1682,7 @@ nanoemulsion	наноэмульсия
   let db;
   let pdfDoc = null;
   let pdfJsLoadPromise = null;
-  let pdfJsWorkerUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  let pdfJsWorkerUrl = new URL('vendor/pdfjs/pdf.worker.min.mjs', location.href).href;
   let nativePdfObjectUrl = null;
   let readerReady = false;
   let documentOpenSerial = 0; // Reject outdated async document loads.
@@ -1707,6 +1707,9 @@ nanoemulsion	наноэмульсия
   let readingTokens = [];
   let currentSelectedBox = null;
   let currentPageViewport = null;
+  let ocrRunSerial = 0;
+  let exampleRequestSerial = 0;
+  let savingTerm = false;
   let dictionaryBaseCount = 0;
   const ocrCache = new Map();
   let onlineRequestSerial = 0;
@@ -1819,14 +1822,38 @@ nanoemulsion	наноэмульсия
       request.onerror = () => reject(request.error);
     });
   }
-  function store(name, mode = 'readonly') { return db.transaction(name, mode).objectStore(name); }
-  function dbPut(name, value) { return new Promise((resolve, reject) => { const r = store(name, 'readwrite').put(value); r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); }); }
-  function dbGet(name, key) { return new Promise((resolve, reject) => { const r = store(name).get(key); r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); }); }
-  function dbAll(name) { return new Promise((resolve, reject) => { const r = store(name).getAll(); r.onsuccess = () => resolve(r.result || []); r.onerror = () => reject(r.error); }); }
-  function dbDelete(name, key) { return new Promise((resolve, reject) => { const r = store(name, 'readwrite').delete(key); r.onsuccess = () => resolve(); r.onerror = () => reject(r.error); }); }
+  // A request succeeding is not a committed write: quota errors may abort later.
+  function dbOperation(name, mode, operation) {
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction(name,mode);
+      let value;
+      tx.oncomplete=()=>resolve(value);
+      tx.onabort=tx.onerror=()=>reject(tx.error || new Error('Операция хранилища отменена.'));
+      const request=operation(tx.objectStore(name));
+      request.onsuccess=()=>{value=request.result;};
+    });
+  }
+  const dbPut=(name,value)=>dbOperation(name,'readwrite',s=>s.put(value));
+  const dbGet=(name,key)=>dbOperation(name,'readonly',s=>s.get(key));
+  const dbAll=(name)=>dbOperation(name,'readonly',s=>s.getAll());
+  const dbDelete=(name,key)=>dbOperation(name,'readwrite',s=>s.delete(key));
+  function putRows(name, rows) {
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction(name,'readwrite');
+      tx.oncomplete=resolve;
+      tx.onerror=tx.onabort=()=>reject(tx.error || new Error('Импорт отменён.'));
+      for(const row of rows)tx.objectStore(name).put(row);
+    });
+  }
+  function pdfOptions(data) {
+    return {data:new Uint8Array(data.slice(0)),isEvalSupported:false,
+      cMapUrl:new URL('vendor/pdfjs/cmaps/',location.href).href,cMapPacked:true,
+      standardFontDataUrl:new URL('vendor/pdfjs/standard_fonts/',location.href).href};
+  }
 
   async function loadDictionary() {
     try {
+      dictionary.clear();
       let text = window.SG_DICTIONARY_TEXT || document.getElementById('embeddedDictionary')?.textContent;
       if (!text) {
         const response = await fetch('assets/dictionary.tsv');
@@ -1890,7 +1917,7 @@ nanoemulsion	наноэмульсия
   async function fetchWithTimeout(input, abortTarget, ms=6500){
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),ms);
-    if(abortTarget==='word')onlineAbort=controller;else exampleAbort=controller;
+    if(abortTarget==='word')onlineAbort=controller;else if(abortTarget==='example')exampleAbort=controller;
     try{return await queryMyMemory(input,controller.signal);}
     finally{clearTimeout(timer);if(abortTarget==='word'&&onlineAbort===controller)onlineAbort=null;
       if(abortTarget==='example'&&exampleAbort===controller)exampleAbort=null;}
@@ -2046,18 +2073,19 @@ nanoemulsion	наноэмульсия
     if(currentTranslationMode()==='offline'){$('exampleTranslationStatus').textContent='Режим «Только офлайн»: онлайн-перевод отключён.';return;}
     if(!internetCandidate()){$('exampleTranslationStatus').textContent='Нет интернета. Английский пример сохранён без изменений.';return;}
     const before=pendingTerm;
+    const serial=++exampleRequestSerial;
     const old=text;
     const button=$('translateExampleBtn');button.disabled=true;
     $('exampleTranslationStatus').textContent='Перевожу предложение через MyMemory…';
     try{
       const translated=await fetchWithTimeout(text,'example',8000);
-      if(pendingTerm!==before||elements.modal.classList.contains('hidden')||elements.exampleInput.value.trim()!==old)return;
+      if(serial!==exampleRequestSerial||pendingTerm!==before||elements.modal.classList.contains('hidden')||elements.exampleInput.value.trim()!==old)return;
       if(!editingExampleTranslationByUser) $('exampleTranslationInput').value=translated;
       $('exampleTranslationStatus').textContent='Перевод предложен MyMemory. Исходное английское предложение не изменено; проверьте точность.';
     }catch(e){
-      if(elements.modal.classList.contains('hidden'))return;
+      if(serial!==exampleRequestSerial||elements.modal.classList.contains('hidden'))return;
       $('exampleTranslationStatus').textContent=e?.name==='AbortError'?'Нет ответа от переводчика (тайм-аут).':'Онлайн-перевод недоступен. Оригинал сохранён.';
-    }finally{button.disabled=false;}
+    }finally{if(serial===exampleRequestSerial)button.disabled=false;}
   }
   $('translateExampleBtn').addEventListener('click',translateExampleOnline);
   // Manual service check: does not send the PDF or the current reading context.
@@ -2068,7 +2096,7 @@ nanoemulsion	наноэмульсия
     }
     b.disabled=true;status.textContent='Проверяю доступность онлайн-переводчика…';
     try{
-      const v=await fetchWithTimeout('water','word',5500);
+      const v=await fetchWithTimeout('water','check',5500);
       status.textContent='✓ Онлайн-переводчик отвечает. Тестовое слово water: '+v.slice(0,65);
     }catch(e){
       status.textContent='Сервис сейчас недоступен. Локальный словарь продолжит работу.';
@@ -2076,15 +2104,15 @@ nanoemulsion	наноэмульсия
   }
   $('checkTranslationBtn').addEventListener('click',checkOnlineTranslation);
   elements.translationInput.addEventListener('input',()=>{editingTranslationByUser=true;$('reviewedCheckbox').checked=false;});
-  $('exampleTranslationInput').addEventListener('input',()=>{editingExampleTranslationByUser=true;});
+  $('exampleTranslationInput').addEventListener('input',()=>{editingExampleTranslationByUser=true;$('reviewedCheckbox').checked=false;});
+  $('sourcePageInput').addEventListener('input',()=>{$('reviewedCheckbox').checked=false;});
   $('translationMode').addEventListener('change',()=>{
     try{localStorage.setItem('sg-translation-mode',currentTranslationMode());}catch(_){}
     ++onlineRequestSerial;
     if(onlineAbort)onlineAbort.abort();if(exampleAbort)exampleAbort.abort();
     if(!elements.modal.classList.contains('hidden')&&!pendingEditId){
       const word=pendingTerm, local=findTranslation(word);
-      if(currentTranslationMode()==='auto')translateSelectedTerm(word,local,++onlineRequestSerial);
-      else elements.dictionaryStatus.textContent=local?'Офлайн-словарь активен.':'Офлайн-режим · перевода нет в словаре.';
+      translateSelectedTerm(word,local,++onlineRequestSerial);
     }
   });
   try{$('translationMode').value=localStorage.getItem('sg-translation-mode')==='offline'?'offline':'auto';}catch(_){}
@@ -2112,7 +2140,7 @@ nanoemulsion	наноэмульсия
         e.stopPropagation();
         if(!confirm('Удалить PDF из библиотеки? Записи глоссария сохранятся.')) return;
         await dbDelete('documents',doc.id);
-        if(currentDoc?.id===doc.id){++documentOpenSerial;currentDoc=null;pdfDoc=null;elements.welcome.classList.remove('hidden');elements.pageWrap.classList.add('hidden');elements.currentDocName.textContent='Документ не открыт';elements.pageInfo.textContent='Добавьте PDF';}
+        if(currentDoc?.id===doc.id){++documentOpenSerial;++activePageRender;++ocrRunSerial;readerReady=false;renderedSource=null;pageWordBoxes=[];if(currentRenderTask)currentRenderTask.cancel();const closed=pdfDoc;currentDoc=null;pdfDoc=null;if(closed)await closed.destroy();clearNativePdf();elements.prevPage.disabled=true;elements.nextPage.disabled=true;$('pageJump').disabled=true;elements.pageCounter.textContent='— / —';$('pageCountLabel').textContent='/ —';elements.welcome.classList.remove('hidden');elements.pageWrap.classList.add('hidden');elements.currentDocName.textContent='Документ не открыт';elements.pageInfo.textContent='Добавьте PDF';}
         await refreshDocuments(); await refreshGlossary();showToast('PDF удалён. Глоссарий сохранён.');
       });row.append(del);
       elements.documentsList.append(row);
@@ -2184,7 +2212,7 @@ nanoemulsion	наноэмульсия
       if(originalData.byteLength>80*1024*1024)showToast('Большой учебник: сохранение более 80 МБ может превысить память браузера.',6500);
       // The independent copy may be transferred; originalData stays intact.
       stage = 'parse';
-      const task = pdfjsLib.getDocument({ data: new Uint8Array(originalData.slice(0)) });
+      const task = pdfjsLib.getDocument(pdfOptions(originalData));
       const loaded = await task.promise;
       const numPages = loaded.numPages;
       // Open the existing copy rather than silently adding duplicate PDFs.
@@ -2247,6 +2275,7 @@ nanoemulsion	наноэмульсия
   }
   async function openDocument(id) {
     readerReady = false;
+    ++activePageRender; ++ocrRunSerial;
     const openToken=++documentOpenSerial;
     try {
       const doc = await dbGet('documents', id);
@@ -2257,7 +2286,7 @@ nanoemulsion	наноэмульсия
       }
       clearNativePdf();
       // dbGet supplies an independent structured-clone of stored data.
-      const task = pdfjsLib.getDocument({ data: new Uint8Array(doc.data) });
+      const task = pdfjsLib.getDocument(pdfOptions(doc.data));
       const openedPdf = await task.promise;
       if(!doc.pages&&openedPdf.numPages){doc.pages=openedPdf.numPages;await dbPut('documents',doc);}
       if(openToken!==documentOpenSerial){try{await openedPdf.destroy();}catch(_){} return false;}
@@ -2272,7 +2301,7 @@ nanoemulsion	наноэмульсия
       elements.pageInfo.textContent = `${pdfDoc.numPages} страниц · PDF хранится на этом устройстве`;
       elements.welcome.classList.add('hidden'); elements.pageWrap.classList.remove('hidden');
       await renderPage();
-      await refreshDocuments();
+      await refreshDocuments(); await refreshGlossary();
       switchMobileView('read');
       return true;
     } catch (error) {
@@ -2304,6 +2333,9 @@ nanoemulsion	наноэмульсия
     if (!pdfDoc) return;
     // Cancel out-of-order visual updates caused by rapid page turning/zoom.
     const renderToken = ++activePageRender;
+    ++ocrRunSerial;
+    gesture=null; clearTimeout(touchHoldTimer); touchHold=null;
+    elements.pageContainer.classList.remove('is-selecting');
     // PDF.js does not allow simultaneous render tasks on one canvas.
     if (currentRenderTask) {
       try { currentRenderTask.cancel(); await currentRenderTask.promise; } catch (_) { /* canceled */ }
@@ -2691,6 +2723,8 @@ nanoemulsion	наноэмульсия
   function openTerm(term, occurrence = -1, existing=null) {
     const cleaned = term.trim().replace(/\s+/g,' ');
     if (!cleaned || cleaned.length > 180) {showToast('Выделите фразу длиной не более 180 символов.');return;}
+    ++exampleRequestSerial;
+    $('translateExampleBtn').disabled=false;
     pendingTerm = cleaned;
     lastDictionaryTerm=null;
     if(dictionaryRequestController)dictionaryRequestController.abort();
@@ -2752,7 +2786,7 @@ nanoemulsion	наноэмульсия
   }
   elements.exampleInput.addEventListener('input',()=>{$('reviewedCheckbox').checked=false;updateExamplePreview();});
 
-  function closeTerm() {++dictionaryRequestSerial;lastDictionaryTerm=null;if(dictionaryRequestController)dictionaryRequestController.abort();++onlineRequestSerial;if(onlineAbort)onlineAbort.abort();if(exampleAbort)exampleAbort.abort();
+  function closeTerm() {++exampleRequestSerial;++dictionaryRequestSerial;lastDictionaryTerm=null;if(dictionaryRequestController)dictionaryRequestController.abort();++onlineRequestSerial;if(onlineAbort)onlineAbort.abort();if(exampleAbort)exampleAbort.abort();
     elements.modal.classList.add('hidden'); pendingTerm = '';pendingEditId=null;pendingSource=null;currentSelectedBox=null;
     if (lastModalFocus?.focus) lastModalFocus.focus({preventScroll:true});lastModalFocus=null;
   }
@@ -2760,7 +2794,7 @@ nanoemulsion	наноэмульсия
     if (e.key==='Escape' && !elements.modal.classList.contains('hidden')) {closeTerm();return;}
     if (!elements.modal.classList.contains('hidden')) {
       if (e.key==='Tab') {
-        const all=[...elements.modal.querySelectorAll('button:not(:disabled),textarea:not(:disabled),input:not(:disabled)')];
+        const all=[...elements.modal.querySelectorAll('button:not(:disabled),textarea:not(:disabled),input:not(:disabled)')].filter(el=>el.getClientRects().length);
         const first=all[0],last=all.at(-1);
         if(e.shiftKey && document.activeElement===first){e.preventDefault();last.focus();}
         else if(!e.shiftKey && document.activeElement===last){e.preventDefault();first.focus();}
@@ -2774,6 +2808,14 @@ nanoemulsion	наноэмульсия
   });
 
   async function saveTerm() {
+    if(savingTerm)return;
+    savingTerm=true;$('saveTerm').disabled=true;
+    try {
+      await commitTerm();
+    }catch(error){console.error('Save failed',error);showToast('Не удалось сохранить термин. Проверьте свободное место и повторите.');}
+    finally{savingTerm=false;$('saveTerm').disabled=false;}
+  }
+  async function commitTerm() {
     const translation = elements.translationInput.value.trim();
     const example = elements.exampleInput.value.trim();
     const exampleTranslation = $('exampleTranslationInput').value.trim();
@@ -2782,9 +2824,10 @@ nanoemulsion	наноэмульсия
     if($('reviewedCheckbox').checked && (!example || !termMatch(example,pendingTerm))) {
       showToast('Для отметки «Проверено» нужен пример из статьи с выбранным термином. Снимите отметку или исправьте пример.',8500);elements.exampleInput.focus();return;
     }
-    const entries = await dbAll('entries');
+    const term=pendingTerm,editId=pendingEditId,reviewed=$('reviewedCheckbox').checked,modalSerial=onlineRequestSerial;
     const src={...(pendingSource||{name:'',id:'',page:0})};
     const pageValue=$('sourcePageInput').value.trim();
+    const entries = await dbAll('entries');
     const correctedPage=Number(pageValue);
     const sourceDoc=src.id ? await dbGet('documents',src.id) : null;
     const maxPage=Math.max(1,Number(sourceDoc?.pages)||((src.id===currentDoc?.id&&pdfDoc)?pdfDoc.numPages:99999));
@@ -2793,12 +2836,12 @@ nanoemulsion	наноэмульсия
       $('sourcePageInput').focus();return;
     }
     if(pageValue)src.page=correctedPage;
-    const duplicate = entries.find(e=>e.id===pendingEditId || (normalizeTerm(e.term)===normalizeTerm(pendingTerm) && e.sourceId===src.id));
-    const entry = {id:duplicate?.id||makeId(),term:pendingTerm,translation,example,exampleTranslation,sourceName:src.name||'',sourceId:src.id||'',page:src.page||0,reviewed:$('reviewedCheckbox').checked,createdAt:duplicate?.createdAt||Date.now()};
+    const duplicate = entries.find(e=>e.id===editId || (normalizeTerm(e.term)===normalizeTerm(term) && e.sourceId===src.id));
+    const entry = {id:duplicate?.id||makeId(),term,translation,example,exampleTranslation,sourceName:src.name||'',sourceId:src.id||'',page:src.page||0,reviewed,createdAt:duplicate?.createdAt||Date.now()};
     // Remember user-provided meanings locally for future lookups.
-    dictionary.set(normalizeTerm(pendingTerm),translation);
     await dbPut('entries', entry);
-    closeTerm(); await refreshGlossary(); showToast(duplicate ? 'Запись обновлена.' : 'Термин добавлен в глоссарий.');
+    dictionary.set(normalizeTerm(entry.term),translation);
+    if(modalSerial===onlineRequestSerial)closeTerm(); await refreshGlossary(); showToast(duplicate ? 'Запись обновлена.' : 'Термин добавлен в глоссарий.');
   }
   async function refreshGlossary() {
     const entries = await dbAll('entries');
@@ -2835,7 +2878,7 @@ nanoemulsion	наноэмульсия
         if(!entry.sourceId){showToast('Для записи не указан источник.');return;}
         const target=await dbGet('documents',entry.sourceId);
         if(!target){showToast('PDF отсутствует в этой библиотеке. Загрузите документ повторно.');return;}
-        if(await openDocument(target.id)){currentPage=Math.max(1,Math.min(Number(entry.page)||1,pdfDoc.numPages));await renderPage();switchMobileView('read');}
+        if(await openDocument(target.id)){if(!pdfDoc)return;currentPage=Math.max(1,Math.min(Number(entry.page)||1,pdfDoc.numPages));await renderPage();switchMobileView('read');}
       });body.append(link);
       const del=document.createElement('button'); del.className='delete-entry'; del.textContent='×'; del.title='Удалить'; del.addEventListener('click',async(event)=>{event.stopPropagation();if(!confirm('Удалить термин из глоссария?'))return;await dbDelete('entries',entry.id);refreshGlossary();showToast('Запись удалена.');});
       row.append(body,del); elements.glossaryList.append(row);
@@ -2854,7 +2897,7 @@ nanoemulsion	наноэмульсия
   async function exportCsv() {
     const entries=await exportEntries(); if(!entries)return;
     const rows=[['№','English term','Перевод','Example of usage','Перевод примера','Источник','Страница'],...entries.map((e,i)=>[i+1,e.term,e.translation,e.example,e.exampleTranslation||'',e.sourceName,e.page])];
-    const csv='\uFEFF'+rows.map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\r\n');
+    const csv='\uFEFF'+rows.map(row=>row.map(v=>`"${String(v??'').replace(/^[\s]*[=+@-]/,m=>"'"+m).replace(/"/g,'""')}"`).join(';')).join('\r\n');
     downloadBlob(new Blob([csv],{type:'text/csv;charset=utf-8'}),'ScientificGlossary.csv'); showToast('CSV-файл подготовлен.');
   }
   function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -2873,25 +2916,50 @@ nanoemulsion	наноэмульсия
   }
 
   async function backupGlossary(){
-    const entries=await dbAll('entries');
-    const json=JSON.stringify({format:'scientific-glossary-backup',version:1,exportedAt:new Date().toISOString(),entries},null,2);
-    downloadBlob(new Blob([json],{type:'application/json;charset=utf-8'}),'ScientificGlossary-backup.json');
-    showToast('Слова сохранены. Внимание: PDF в резервную копию не входят.',6500);
+    try {
+      const [entries,customDictionary,translationCache]=await Promise.all(['entries','customDictionary','translationCache'].map(dbAll));
+      const json=JSON.stringify({format:'scientific-glossary-backup',version:2,exportedAt:new Date().toISOString(),entries,customDictionary,translationCache},null,2);
+      downloadBlob(new Blob([json],{type:'application/json;charset=utf-8'}),'ScientificGlossary-backup.json');
+      showToast('Слова, словарь и переводы сохранены. PDF в резервную копию не входят.',6500);
+    }catch(error){showToast('Не удалось создать копию: '+error.message);}
   }
   async function restoreGlossary(file){
     if(!file)return;
     try{
-      if(file.size>10*1024*1024)throw new Error('Файл копии слишком велик.');
+      if(file.size>20*1024*1024)throw new Error('Файл копии слишком велик (до 20 МБ).');
       const data=JSON.parse(await file.text());
-      if(data.format!=='scientific-glossary-backup'||!Array.isArray(data.entries))throw new Error('Неверный формат резервной копии.');
-      if(!confirm('Восстановить '+data.entries.length+' записей? Существующие записи останутся.'))return;
-      let count=0;
-      for(const row of data.entries.slice(0,10000)){
-        if(typeof row.term!=='string'||typeof row.translation!=='string'||!row.term.trim()||!row.translation.trim())continue;
-        const entry={id:typeof row.id==='string'?row.id:makeId(),term:row.term.slice(0,180),translation:row.translation.slice(0,1500),example:String(row.example||'').slice(0,3000),exampleTranslation:String(row.exampleTranslation||'').slice(0,3000),sourceName:String(row.sourceName||''),sourceId:String(row.sourceId||''),page:Number(row.page)||0,reviewed:Boolean(row.reviewed),createdAt:Number(row.createdAt)||Date.now()};
-        await dbPut('entries',entry);count++;
+      if(!data||data.format!=='scientific-glossary-backup'||!Array.isArray(data.entries))throw new Error('Неверный формат резервной копии.');
+      if(data.entries.length>10000)throw new Error('В копии более 10 000 записей.');
+      const existing=await dbAll('entries'),byId=new Map(existing.map(e=>[e.id,e]));
+      const rows=[];
+      for(const row of data.entries){
+        if(!row||typeof row.term!=='string'||typeof row.translation!=='string'||!row.term.trim()||!row.translation.trim())continue;
+        const term=row.term.trim().slice(0,180),translation=row.translation.trim().slice(0,1500);
+        const entry={id:typeof row.id==='string'&&row.id?row.id:makeId(),term,translation,example:String(row.example||'').slice(0,3000),exampleTranslation:String(row.exampleTranslation||'').slice(0,3000),sourceName:String(row.sourceName||'').slice(0,1000),sourceId:String(row.sourceId||'').slice(0,200),page:Number.isSafeInteger(row.page)&&row.page>0?row.page:0,reviewed:Boolean(row.reviewed)&&Boolean(termMatch(String(row.example||''),term)),createdAt:Number(row.createdAt)||Date.now()};
+        const previous=byId.get(entry.id);
+        if(previous){
+          if(['term','translation','example','exampleTranslation','sourceId','page','reviewed'].every(k=>(previous[k]??'')===(entry[k]??'')))continue;
+          entry.id=makeId(); // Never replace newer local edits with an old backup.
+        }
+        byId.set(entry.id,entry);rows.push(entry);
       }
-      await refreshGlossary();showToast('Восстановлено записей: '+count);
+      const cleanDictionary=arr=>(Array.isArray(arr)?arr:[]).slice(0,100000).filter(r=>r&&typeof r.term==='string'&&typeof r.translation==='string'&&r.term.trim()&&r.translation.trim()).map(r=>({term:normalizeTerm(r.term).slice(0,180),translation:r.translation.slice(0,1500),at:Number(r.at)||Date.now()}));
+      const dictionaries=cleanDictionary(data.customDictionary),cache=cleanDictionary(data.translationCache);
+      if(!confirm(`Восстановить ${rows.length} новых записей и словари? Существующие записи сохранятся.`))return;
+      // All stores commit together; malformed rows or quota failure cannot leave a partial restore.
+      await new Promise((resolve,reject)=>{
+        const tx=db.transaction(['entries','customDictionary','translationCache'],'readwrite');
+        tx.oncomplete=resolve;tx.onabort=tx.onerror=()=>reject(tx.error||new Error('Восстановление отменено.'));
+        for(const row of rows)tx.objectStore('entries').put(row);
+        for(const [name,list] of [['customDictionary',dictionaries],['translationCache',cache]])for(const row of list){
+          const store=tx.objectStore(name),request=store.get(row.term);
+          request.onsuccess=()=>{if(!request.result)store.put(row);};
+        }
+      });
+      await loadDictionary();
+      for(const row of await dbAll('customDictionary'))dictionary.set(row.term,row.translation);
+      for(const row of await dbAll('entries'))dictionary.set(normalizeTerm(row.term),row.translation);
+      await refreshGlossary();showToast('Восстановлено новых записей: '+rows.length);
     }catch(e){console.warn(e);showToast('Не удалось восстановить копию: '+e.message,7000);}
   }
   async function importDictionary(file) {
@@ -2937,40 +3005,59 @@ nanoemulsion	наноэмульсия
     walk(data.blocks); return all;
   }
   async function recognizeCurrentPage(){
-    if(!pdfDoc){showToast('Сначала откройте PDF.');return;}
+    if(!pdfDoc||!readerReady||!renderedSource){showToast('Дождитесь открытия страницы PDF.');return;}
+    const run=++ocrRunSerial,source={...renderedSource},render=activePageRender;
+    const current=()=>run===ocrRunSerial&&render===activePageRender&&currentDoc?.id===source.id;
+    const key=source.id+':'+source.page;
     const ocrBtn=$('ocrBtn');ocrBtn.disabled=true;
+    const width=elements.canvas.clientWidth,height=elements.canvas.clientHeight;
+    // Snapshot the pixels before loading workers: navigation can repaint the visible canvas.
+    const snapshot=document.createElement('canvas');
+    snapshot.width=elements.canvas.width;snapshot.height=elements.canvas.height;
+    snapshot.getContext('2d').drawImage(elements.canvas,0,0);
+    let worker;
     try{
-      elements.ocrStatus.textContent='OCR: подготовка (первый запуск требует интернет)…';
-      if(ocrCache.has(currentDoc.id+':'+currentPage)){
-        const cached=ocrCache.get(currentDoc.id+':'+currentPage);
-        pageWordBoxes=cached.boxes;currentPageText=cached.text;
-        readingLines=buildReadingLines(pageWordBoxes,elements.canvas.clientWidth);pageHasText=true;
-        elements.ocrStatus.textContent=`OCR: ${pageWordBoxes.length} слов`;showToast('Результат OCR загружен из памяти.');return;
+      elements.ocrStatus.textContent='OCR: подготовка локального распознавания…';
+      let cached=ocrCache.get(key);
+      if(!cached){
+        if(!window.Tesseract)await addScript('vendor/ocr/tesseract.min.js');
+        if(!current())return;
+        worker=await Tesseract.createWorker('eng',1,{
+          workerPath:new URL('vendor/ocr/worker.min.js',location.href).href,
+          corePath:new URL('vendor/ocr/',location.href).href,
+          langPath:new URL('vendor/',location.href).href,
+          workerBlobURL:false,
+          logger:msg=>{if(current()&&msg.progress!=null)elements.ocrStatus.textContent='OCR: '+Math.round(msg.progress*100)+'%';}
+        });
+        if(!current())return;
+        const {data}=await worker.recognize(snapshot,{}, {text:true,blocks:true});
+        const boxes=[];
+        for(const w of collectOcrWords(data)){
+          const r=w.bbox,raw=String(w.text||'').trim();
+          const word=raw.replace(/^[^A-Za-z]+|[^A-Za-z0-9'’-]+$/g,'');
+          if(!r||!word||!/[A-Za-z]/.test(word))continue;
+          boxes.push({word,tail:(raw.match(/[.,:;!?]+$/)||[])[0]||'',ocr:true,selectable:true,
+            x:r.x0/snapshot.width,y:r.y0/snapshot.height,
+            w:(r.x1-r.x0)/snapshot.width,h:(r.y1-r.y0)/snapshot.height,charAt:0,
+            sourcePage:source.page,sourceDocId:source.id});
+        }
+        if(!boxes.length)throw new Error('Слова не распознаны. Попробуйте увеличить страницу.');
+        boxes.sort((a,b)=>a.y-b.y||a.x-b.x);
+        cached={boxes,text:data.text||boxes.map(w=>w.word).join(' ')};
+        ocrCache.set(key,cached);
       }
-      if(!window.Tesseract)await addScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js');
-      const c=elements.canvas;
-      elements.ocrStatus.textContent='OCR распознаёт страницу…';
-      const worker=await Tesseract.createWorker('eng',1,{
-        logger:msg=>{if(msg.progress!=null)elements.ocrStatus.textContent='OCR: '+Math.round(msg.progress*100)+'% · '+(msg.status||'');}
-      });
-      let data;
-      try{data=(await worker.recognize(c,{}, {text:true,blocks:true})).data;}
-      finally{await worker.terminate();}
-      const found=collectOcrWords(data),scaleX=c.clientWidth/c.width,scaleY=c.clientHeight/c.height;
-      const boxes=[];
-      for(const w of found){const r=w.bbox,text=(w.text||'').replace(/[.,:;!?]+$/,'').trim();
-        if(!r||!text||!/[A-Za-z]/.test(text))continue;
-        boxes.push({word:text.replace(/[.,:;!?]+$/,''),tail:(text.match(/[.,:;!?]+$/)||[])[0]||'',ocr:true,selectable:true,x:r.x0*scaleX,y:r.y0*scaleY,w:(r.x1-r.x0)*scaleX,h:(r.y1-r.y0)*scaleY,charAt:0});
-      }
-      boxes.sort((a,b)=>a.y-b.y||a.x-b.x);
-      if(!boxes.length)throw new Error('Слова не распознаны. Попробуйте увеличить страницу.');
-      pageWordBoxes=boxes;currentPageText=data.text||boxes.map(w=>w.word).join(' ');
-      readingLines=buildReadingLines(pageWordBoxes,c.clientWidth);pageHasText=true;
-      ocrCache.set(currentDoc.id+':'+currentPage,{boxes,text:currentPageText});
-      elements.ocrStatus.textContent=`OCR: ${boxes.length} слов · нажмите на слово`;
-      showToast('OCR завершён. Теперь нажимайте на слова скана.');
-    }catch(e){console.error('OCR failed',e);elements.ocrStatus.textContent='OCR недоступен · можно внести термин вручную';showToast('OCR: '+e.message+'. Для первого запуска нужно интернет-соединение.',8500);}
-    finally{ocrBtn.disabled=false;}
+      if(!current())return;
+      pageWordBoxes=cached.boxes.map(w=>({...w,x:w.x*width,y:w.y*height,w:w.w*width,h:w.h*height}));
+      currentPageText=cached.text;readingLines=buildReadingLines(pageWordBoxes,width);pageHasText=true;
+      elements.ocrStatus.textContent=`OCR: ${pageWordBoxes.length} слов · нажмите на слово`;
+      showToast('OCR завершён на устройстве. Проверьте распознанный текст по скану.');
+    }catch(e){
+      console.error('OCR failed',e);
+      if(current()){elements.ocrStatus.textContent='OCR недоступен · можно внести термин вручную';showToast('OCR: '+e.message,8500);}
+    }finally{
+      if(worker)await worker.terminate();
+      snapshot.width=0;snapshot.height=0;ocrBtn.disabled=false;
+    }
   }
 
   elements.pdfInput.addEventListener('change', async e=>{
@@ -3117,7 +3204,7 @@ nanoemulsion	наноэмульсия
   elements.glossarySearch.addEventListener('input',refreshGlossary);
   $('qualityFilter').addEventListener('change',refreshGlossary);
   $('exportCsvBtn').addEventListener('click',exportCsv); $('exportDocBtn').addEventListener('click',exportWord); $('printBtn').addEventListener('click',printGlossary);
-  $('clearSelection').addEventListener('click',()=>{window.getSelection()?.removeAllRanges();elements.highlights.replaceChildren();phraseStart=null;phraseMode=false;elements.phraseButton.classList.remove('btn-primary');});
+  $('clearSelection').addEventListener('click',()=>{elements.phraseButton.setAttribute('aria-pressed','false');window.getSelection()?.removeAllRanges();elements.highlights.replaceChildren();phraseStart=null;phraseMode=false;elements.phraseButton.classList.remove('btn-primary');});
   $('installBtn').addEventListener('click',async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;$('installBtn').classList.add('hidden');});
   window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;$('installBtn').classList.remove('hidden');});
   window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(pdfDoc)renderPage();},220);});
@@ -3127,45 +3214,21 @@ nanoemulsion	наноэмульсия
     try {
       await navigator.serviceWorker.register('sw.js');
       await navigator.serviceWorker.ready;
+      $('offlineState').textContent='готово без сети';
       if (!navigator.serviceWorker.controller) {
         await Promise.race([
           new Promise(resolve => navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true })),
           new Promise(resolve => setTimeout(resolve, 2500))
         ]);
       }
-    } catch (err) { console.warn('Service Worker registration failed', err); }
+    } catch (err) { console.warn('Service Worker registration failed', err); $('offlineState').textContent='офлайн-копия не готова'; }
   }
   function loadPdfJs() {
     if(window.pdfjsLib)return Promise.resolve();
-    if(pdfJsLoadPromise)return pdfJsLoadPromise;
-    pdfJsLoadPromise=new Promise((resolve,reject)=>{
-      const sources=[
-        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
-        'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js'
-      ];
-      let index=0;
-      function next(){
-        if(window.pdfjsLib){resolve();return;}
-        if(index>=sources.length){reject(new Error('Оба сервера PDF.js недоступны.'));return;}
-        const src=sources[index++];
-        const script=document.createElement('script');
-        let finished=false;
-        const timeout=setTimeout(()=>finish(false),7500);
-        function finish(ok){
-          if(finished)return;
-          finished=true;clearTimeout(timeout);
-          script.onload=null;script.onerror=null;
-          if(ok&&window.pdfjsLib){
-            pdfJsWorkerUrl=src.replace('/pdf.min.js','/pdf.worker.min.js');
-            resolve();
-          }else{script.remove();next();}
-        }
-        script.onload=()=>finish(!!window.pdfjsLib);
-        script.onerror=()=>finish(false);
-        script.src=src;document.head.append(script);
-      }
-      next();
-    }).catch(err=>{pdfJsLoadPromise=null;throw err;});
+    if(!pdfJsLoadPromise)pdfJsLoadPromise=import('./vendor/pdfjs/pdf.min.mjs').then(lib=>{
+      window.pdfjsLib=lib;
+      lib.GlobalWorkerOptions.workerSrc=pdfJsWorkerUrl;
+    }).catch(error=>{pdfJsLoadPromise=null;throw error;});
     return pdfJsLoadPromise;
   }
   async function init() {
@@ -3176,13 +3239,13 @@ nanoemulsion	наноэмульсия
       for(const row of await dbAll('customDictionary')) if(row.term&&row.translation)dictionary.set(row.term,row.translation);
       for(const e of await dbAll('entries')) if(e.term&&e.translation)dictionary.set(normalizeTerm(e.term),e.translation);
       await refreshDocuments();await refreshGlossary();
-      $('readerHint').textContent='v1.9 · Нажмите слово или выделите фразу удержанием/протягиванием · Проверяйте примеры по статье';
+      $('readerHint').textContent='v2.0 · Нажмите слово или выделите фразу удержанием/протягиванием · Проверяйте примеры по статье';
       if((await dbAll('documents')).length) switchMobileView('read');
     } catch(error){console.error(error);showToast('Невозможно открыть локальное хранилище браузера.',7500);return;}
     try {
       await loadPdfJs();
       pdfjsLib.GlobalWorkerOptions.workerSrc=pdfJsWorkerUrl;
-    } catch(err){console.error(err);showToast('Не удалось загрузить PDF.js. Подключите интернет для первого запуска или повторите позже.',10000);}
+    } catch(err){console.error(err);showToast('Не удалось загрузить PDF.js. Проверьте загрузку файлов приложения и повторите позже.',10000);}
     if(!window.isSecureContext && location.protocol!=='file:')showToast('Для локального хранения и офлайн-кэша откройте приложение по HTTPS.');
   }
 
