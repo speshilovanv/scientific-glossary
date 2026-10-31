@@ -170,7 +170,7 @@ button:disabled{opacity:.36;cursor:not-allowed}
 @media(max-width:440px){.page-jump{padding:0 2px;gap:2px}.page-jump input{width:33px;min-width:27px;max-width:36px;font-size:13px}.page-jump span{font-size:11px}.reader-controls{gap:3px}}
 
 
-/* v2.1.0: concise dictionary senses, accessible selection and source-page correction. */
+/* v2.2.0: concise dictionary senses, accessible selection and source-page correction. */
 .meaning-panel{margin:13px 0 4px;border:1px solid #e2e8e2;border-radius:13px;background:#fbfcfa;padding:11px}
 .meaning-panel-head{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;margin-bottom:9px}
 .meaning-panel-head h3{margin:0;color:#283d34;font-size:13px;font-weight:700}
@@ -185,15 +185,66 @@ button:disabled{opacity:.36;cursor:not-allowed}
 .word-highlight.dragging{background:#6fc3a75a;border-color:#287b65}
 .page-container.is-selecting{cursor:text}
 @media(max-width:760px){.meaning-panel{padding:10px}.meaning-panel-head{align-items:stretch}.source-page-edit input{min-width:60px}}
+
+/* 2.2: compact reading mode and scroll-safe PDF alignment. */
+.app-shell{min-height:0}
+.reader-toolbar,.reader-tools,.reader-footer{flex-shrink:0}
+.reader-controls{flex-wrap:wrap;justify-content:flex-end}
+.reader-viewport{display:block;text-align:left}
+.page-wrap{display:block;flex:none;width:max-content;min-width:0;margin:0 auto}
+.welcome-card{margin:clamp(24px,7vh,70px) auto}
+.reader-fit{min-height:40px;max-width:135px;padding:5px 7px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);font-size:12px}
+#readerToolsToggle{display:none}
+#bookmarksBtn{font-size:21px}
+body.focus-reading .topbar{height:44px;padding:0 12px}
+body.focus-reading .brand{display:none}
+body.focus-reading .top-actions{width:100%;justify-content:space-between}
+body.focus-reading .focus-toggle{display:inline-flex;min-height:36px}
+body.focus-reading .app-shell{display:grid;grid-template-columns:minmax(0,1fr);height:calc(100dvh - 44px);padding:0;gap:0;max-width:none;min-height:0}
+body.focus-reading .sidebar,body.focus-reading .mobile-nav,body.focus-reading .reader-footer{display:none!important}
+body.focus-reading .reader-area{display:flex!important;grid-column:1;height:100%;min-height:0;border:0;border-radius:0}
+body.focus-reading .reader-toolbar{min-height:52px;padding:4px 10px;gap:8px;flex-direction:row;flex-wrap:wrap}
+body.focus-reading .reader-toolbar .pdf-icon{display:none}
+body.focus-reading .doc-title-wrap{flex:1;min-width:130px}
+body.focus-reading .doc-title-wrap strong{max-width:240px;font-size:12px}
+body.focus-reading .doc-title-wrap small{font-size:11px}
+body.focus-reading .reader-controls{gap:5px}
+body.focus-reading .reader-controls .icon-btn{width:40px;height:40px}
+body.focus-reading .reader-viewport{padding:8px;overscroll-behavior:contain}
+body.focus-reading .reader-tools{display:none;max-height:35dvh;overflow-y:auto}
+body.focus-reading.focus-tools-open .reader-tools{display:flex;flex-wrap:wrap}
+body.focus-reading #readerToolsToggle{display:inline-grid}
+.bookmark-dialog{width:min(94vw,520px);max-height:88dvh;overflow-y:auto;border:1px solid var(--line);border-radius:18px;padding:22px;color:var(--ink);box-shadow:0 20px 70px #14282144}
+.bookmark-dialog::backdrop{background:#14282188}
+.bookmark-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.bookmark-head h2{font-size:20px;margin:0}
+.bookmark-dialog label{display:block;font-size:13px;margin:15px 0 6px}
+#bookmarkNote{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:10px;color:var(--ink);font:inherit}
+.bookmark-item{border-top:1px solid var(--line);padding:12px 0;display:flex;align-items:start;gap:10px}
+.bookmark-item>div{flex:1;min-width:0}
+.bookmark-item p{font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere;margin:6px 0;color:var(--muted)}
+.bookmark-item small{font-size:11px;color:var(--muted)}
+#bookmarkFeedback{font-size:12px;color:var(--muted);min-height:1.5em}
+@media(max-width:760px){
+ .focus-toggle{display:inline-flex;font-size:11px;padding:6px 9px}
+ .topbar{gap:7px}.top-actions{gap:6px}.brand strong{font-size:13px}.brand-mark{display:none}
+ .reader-controls{justify-content:center;gap:4px}.reader-fit{max-width:112px;min-height:40px}
+ body.focus-reading .doc-title-wrap{display:none}
+ body.focus-reading .reader-toolbar{justify-content:center}
+ body.focus-reading .reader-controls{justify-content:center;width:100%}
+ body.focus-reading .zoom-value{display:none}
+ body.focus-reading .control-divider{display:none}
+ body.focus-reading .reader-tools .mode-control{width:auto}
+}
 </style>
-  <title>ScientificGlossary Reader · 2.1.0</title>
+  <title>ScientificGlossary Reader · 2.2.0</title>
 </head>
 <body>
   <header class="topbar">
     <div class="brand"><div class="brand-mark" aria-hidden="true">S<span>·</span></div><div><strong>ScientificGlossary</strong><small>Научная читалка</small></div></div>
     <div class="top-actions">
       <button id="focusReaderBtn" type="button" class="btn btn-outline focus-toggle" aria-pressed="false" title="Скрыть библиотеку и глоссарий и увеличить PDF">Режим чтения</button>
-      <span id="offlineBadge" class="status"><i></i> <span id="offlineState">подготовка офлайн…</span> <span class="version">v2.1.0</span></span>
+      <span id="offlineBadge" class="status"><i></i> <span id="offlineState">подготовка офлайн…</span> <span class="version">v2.2.0</span></span>
       <button id="installBtn" class="btn btn-quiet hidden">Установить</button>
     </div>
   </header>
@@ -236,9 +287,13 @@ button:disabled{opacity:.36;cursor:not-allowed}
           <button id="zoomOut" class="icon-btn" title="Уменьшить" aria-label="Уменьшить масштаб">−</button>
           <span id="zoomValue" class="zoom-value">100%</span>
           <button id="zoomIn" class="icon-btn" title="Увеличить" aria-label="Увеличить масштаб">+</button>
+          <select id="pageFit" class="reader-fit" aria-label="Размер страницы"><option value="width">По ширине</option><option value="page">Вся страница</option><option value="column">Крупнее</option></select>
+          <button id="bookmarksBtn" class="icon-btn" type="button" aria-label="Закладки и заметки" title="Закладки и заметки" disabled>☆</button>
+          <button id="readerToolsToggle" class="icon-btn" type="button" aria-label="Инструменты чтения" aria-controls="readerTools" aria-expanded="false" title="Инструменты чтения">⋯</button>
+          <button id="fullscreenBtn" class="icon-btn" type="button" aria-label="На весь экран" title="На весь экран">⛶</button>
         </div>
       </div>
-      <div class="reader-tools"><button id="ocrBtn" class="btn btn-outline" title="Распознать английский текст скана на устройстве">OCR скана</button><button id="columnJump" class="btn btn-outline hidden" title="Перейти к другой половине страницы PDF">⇄ Колонка</button><label class="mode-control" for="translationMode"><span>Перевод</span><select id="translationMode" aria-label="Режим перевода"><option value="auto">Авто · онлайн / офлайн</option><option value="offline">Только офлайн</option></select></label><button id="checkTranslationBtn" class="btn btn-outline" type="button" title="Проверить MyMemory без отправки PDF">Проверить перевод</button><span id="providerStatus" class="provider-status" role="status" aria-live="polite"></span><button id="selectPhraseBtn" class="btn btn-outline" title="Отметьте первое и последнее слово фразы" aria-pressed="false">Выделить фразу</button><button id="moreReaderTools" type="button" class="btn btn-outline" aria-expanded="false">Ещё инструменты</button><span id="ocrStatus" aria-live="polite">Нажмите на слово в PDF</span></div>
+      <div id="readerTools" class="reader-tools"><button id="ocrBtn" class="btn btn-outline" title="Распознать английский текст скана на устройстве">OCR скана</button><button id="columnJump" class="btn btn-outline hidden" title="Перейти к другой половине страницы PDF">⇄ Колонка</button><label class="mode-control" for="translationMode"><span>Перевод</span><select id="translationMode" aria-label="Режим перевода"><option value="auto">Авто · онлайн / офлайн</option><option value="offline">Только офлайн</option></select></label><button id="checkTranslationBtn" class="btn btn-outline" type="button" title="Проверить MyMemory без отправки PDF">Проверить перевод</button><span id="providerStatus" class="provider-status" role="status" aria-live="polite"></span><button id="selectPhraseBtn" class="btn btn-outline" title="Отметьте первое и последнее слово фразы" aria-pressed="false">Выделить фразу</button><button id="moreReaderTools" type="button" class="btn btn-outline" aria-expanded="false">Ещё инструменты</button><span id="ocrStatus" aria-live="polite">Нажмите на слово в PDF</span></div>
       <div id="readerViewport" class="reader-viewport">
         <div id="welcome" class="welcome-card">
           <div class="welcome-illustration" aria-hidden="true">▤</div>
@@ -257,6 +312,15 @@ button:disabled{opacity:.36;cursor:not-allowed}
       <div class="reader-footer"><span id="readerHint">Нажмите слово или выделите фразу протягиванием (на планшете — удержать и провести). OCR для сканов.</span><button id="clearSelection" class="text-btn">Снять выделение</button></div>
     </section>
   </main>
+
+  <dialog id="bookmarkDialog" class="bookmark-dialog" aria-labelledby="bookmarkTitle">
+    <div class="bookmark-head"><h2 id="bookmarkTitle">Закладки и заметки</h2><button id="closeBookmarks" class="icon-btn" type="button" aria-label="Закрыть закладки">×</button></div>
+    <p id="bookmarkLocation" class="muted"></p>
+    <label for="bookmarkNote">Заметка к месту чтения</label><textarea id="bookmarkNote" maxlength="2000" placeholder="Например: остановился перед разделом «Результаты»"></textarea>
+    <button id="saveBookmark" type="button" class="btn btn-primary">Сохранить место чтения</button>
+    <p id="bookmarkFeedback" role="status" aria-live="polite"></p>
+    <div id="bookmarksList" aria-label="Сохранённые закладки"></div>
+  </dialog>
 
   <nav class="mobile-nav" aria-label="Разделы приложения">
     <button id="mobileRead" type="button" class="mobile-tab active" data-view-target="read"><span aria-hidden="true">▤</span> Читать</button>
@@ -1674,7 +1738,7 @@ needle	игла; игольчатый электрод
 nanoemulsion	наноэмульсия
 
 </script><script>
-/* ScientificGlossary Reader v2.1.0 — direct phrase selection, other meanings, explicit source page */
+/* ScientificGlossary Reader v2.2.0 — direct phrase selection, other meanings, explicit source page */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -1690,6 +1754,9 @@ nanoemulsion	наноэмульсия
   let currentDoc = null;
   let currentPage = 1;
   let zoom = 1;
+  let normalFitBeforeFocus = window.innerWidth<=760?'column':'width';
+  let bookmarkDraft = null;
+  let bookmarkSaving = false;
   let currentPageText = '';
   let pageWordBoxes = []; // On-page word rectangles in PDF canvas CSS pixels
   let pageTextOffsets = []; // Offsets of text runs for the exact example context
@@ -1781,14 +1848,43 @@ nanoemulsion	наноэмульсия
   }
   document.querySelectorAll('.mobile-tab').forEach(b=>b.addEventListener('click',()=>switchMobileView(b.dataset.viewTarget)));
   switchMobileView('library');
-  // Distraction-free reading mode for laptops and tablets; mobile already has tabs.
+  function setFocusReading(focused, restoring=false) {
+    if(focused&&!restoring){normalFitBeforeFocus=$('pageFit').value;$('pageFit').value='page';zoom=1;}
+    if(!focused&&!restoring){$('pageFit').value=normalFitBeforeFocus;zoom=1;}
+    document.body.classList.toggle('focus-reading',focused);
+    document.body.classList.remove('focus-tools-open');
+    $('readerToolsToggle').setAttribute('aria-expanded','false');
+    const button=$('focusReaderBtn');button.setAttribute('aria-pressed',String(focused));
+    button.textContent=focused?'Выйти из чтения':'Режим чтения';
+    button.title=focused?'Показать библиотеку и глоссарий':'Чтение с компактными панелями';
+    if(focused)switchMobileView('read');
+    try{localStorage.setItem('sg-focus-reading',String(focused));localStorage.setItem('sg-fit-mode',$('pageFit').value);}catch(_){}
+  }
+  $('pageFit').value=normalFitBeforeFocus;
+  try {
+    const fit=localStorage.getItem('sg-fit-mode');if(['width','page','column'].includes(fit))$('pageFit').value=fit;
+    setFocusReading(localStorage.getItem('sg-focus-reading')==='true',true);
+  }catch(_){}
   $('focusReaderBtn').addEventListener('click',()=>{
-    const focused=document.body.classList.toggle('focus-reading');
-    const b=$('focusReaderBtn');
-    b.setAttribute('aria-pressed',String(focused));
-    b.textContent=focused?'Показать библиотеку':'Режим чтения';
-    b.title=focused?'Вернуться к библиотеке и глоссарию':'Скрыть боковую панель и увеличить PDF';
+    const focused=!document.body.classList.contains('focus-reading');setFocusReading(focused);
+    if(!focused)switchMobileView('library');
     if(pdfDoc)requestAnimationFrame(()=>renderPage());
+  });
+  $('readerToolsToggle').addEventListener('click',()=>{
+    const open=document.body.classList.toggle('focus-tools-open');$('readerToolsToggle').setAttribute('aria-expanded',String(open));
+    if(pdfDoc)requestAnimationFrame(()=>renderPage());
+  });
+  $('pageFit').addEventListener('change',()=>{
+    zoom=1;try{localStorage.setItem('sg-fit-mode',$('pageFit').value);}catch(_){}
+    if(pdfDoc)renderPage();
+  });
+  if(!document.fullscreenEnabled)$('fullscreenBtn').classList.add('hidden');
+  $('fullscreenBtn').addEventListener('click',async()=>{
+    try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}
+    catch(_){showToast('Полноэкранный режим недоступен в этом браузере. Компактный режим чтения продолжает работать.');}
+  });
+  document.addEventListener('fullscreenchange',()=>{
+    $('fullscreenBtn').setAttribute('aria-label',document.fullscreenElement?'Выйти из полного экрана':'На весь экран');
   });
 
   const elements = {
@@ -2201,9 +2297,10 @@ nanoemulsion	наноэмульсия
       const del=document.createElement('button');del.className='remove-doc';del.textContent='×';del.title='Удалить PDF (глоссарий сохранится)';
       del.addEventListener('click',async e=>{
         e.stopPropagation();
-        if(!confirm('Удалить PDF из библиотеки? Записи глоссария сохранятся.')) return;
+        if(!confirm('Удалить PDF и его закладки из библиотеки? Записи глоссария сохранятся.')) return;
         await dbDelete('documents',doc.id);
-        if(currentDoc?.id===doc.id){++documentOpenSerial;++activePageRender;++ocrRunSerial;readerReady=false;renderedSource=null;pageWordBoxes=[];if(currentRenderTask)currentRenderTask.cancel();const closed=pdfDoc;currentDoc=null;pdfDoc=null;if(closed)await closed.destroy();clearNativePdf();elements.prevPage.disabled=true;elements.nextPage.disabled=true;$('pageJump').disabled=true;elements.pageCounter.textContent='— / —';$('pageCountLabel').textContent='/ —';elements.welcome.classList.remove('hidden');elements.pageWrap.classList.add('hidden');elements.currentDocName.textContent='Документ не открыт';elements.pageInfo.textContent='Добавьте PDF';}
+        try{localStorage.removeItem('sg-page-'+doc.id);localStorage.removeItem('sg-progress-'+doc.id);if(localStorage.getItem('sg-last-document')===doc.id)localStorage.removeItem('sg-last-document');}catch(_){}
+        if(currentDoc?.id===doc.id){++documentOpenSerial;++activePageRender;++ocrRunSerial;readerReady=false;renderedSource=null;pageWordBoxes=[];if(currentRenderTask)currentRenderTask.cancel();const closed=pdfDoc;currentDoc=null;pdfDoc=null;if(closed)await closed.destroy();clearNativePdf();elements.prevPage.disabled=true;elements.nextPage.disabled=true;$('pageJump').disabled=true;elements.pageCounter.textContent='— / —';$('pageCountLabel').textContent='/ —';elements.welcome.classList.remove('hidden');elements.pageWrap.classList.add('hidden');elements.currentDocName.textContent='Документ не открыт';elements.pageInfo.textContent='Добавьте PDF';updateBookmarkButton();}
         await refreshDocuments(); await refreshGlossary();showToast('PDF удалён. Глоссарий сохранён.');
       });row.append(del);
       elements.documentsList.append(row);
@@ -2336,7 +2433,7 @@ nanoemulsion	наноэмульсия
     elements.prevPage.disabled=true;elements.nextPage.disabled=true;$('pageJump').disabled=true;
     switchMobileView('read');
   }
-  async function openDocument(id) {
+  async function openDocument(id, options={}) {
     readerReady = false;
     ++activePageRender; ++ocrRunSerial;
     const openToken=++documentOpenSerial;
@@ -2358,12 +2455,19 @@ nanoemulsion	наноэмульсия
       pdfDoc = openedPdf; currentDoc = doc;
       let savedPage=1;
       try{savedPage=Number(localStorage.getItem('sg-page-'+doc.id))||1;}catch(_){}
-      currentPage = Math.max(1,Math.min(pdfDoc.numPages,savedPage)); zoom = 1;
+      const bookmark=validBookmarks(doc).find(b=>b.id===(options.bookmarkId||doc.resumeBookmarkId));
+      let progress=null;try{progress=JSON.parse(localStorage.getItem('sg-progress-'+doc.id)||'null');}catch(_){}
+      const resume=bookmark||progress;
+      currentPage = Math.max(1,Math.min(pdfDoc.numPages,Number(resume?.page)||savedPage));
+      zoom=Number.isFinite(resume?.zoom)?Math.max(.55,Math.min(2.5,resume.zoom)):1;
+      if(['page','width','column'].includes(resume?.fit))$('pageFit').value=resume.fit;
       phraseMode=false; phraseStart=null; elements.phraseButton.classList.remove('btn-primary');
       elements.currentDocName.textContent = doc.name;
       elements.pageInfo.textContent = `${pdfDoc.numPages} страниц · PDF хранится на этом устройстве`;
       elements.welcome.classList.add('hidden'); elements.pageWrap.classList.remove('hidden');
-      await renderPage();
+      // Make the reader visible before measuring mobile viewport dimensions.
+      switchMobileView('read');
+      await renderPage(resume);
       await refreshDocuments(); await refreshGlossary();
       switchMobileView('read');
       return true;
@@ -2390,10 +2494,13 @@ nanoemulsion	наноэмульсия
   $('pageJump').addEventListener('change',jumpToPage);
   $('pageJump').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();jumpToPage();e.target.blur();}});
 
-  async function renderPage() {
+  async function renderPage(restorePosition=null) {
+    const position=restorePosition || (readerReady&&renderedSource?.id===currentDoc?.id&&renderedSource?.page===currentPage?captureReadingPosition():null);
     readerReady = false;
     renderedSource=null;
     if (!pdfDoc) return;
+    $('pageJump').disabled=true;
+    elements.ocrStatus.textContent='Подготавливаю страницу…';
     // Cancel out-of-order visual updates caused by rapid page turning/zoom.
     const renderToken = ++activePageRender;
     suppressClickUntil=0;
@@ -2415,10 +2522,12 @@ nanoemulsion	наноэмульсия
     elements.highlights.replaceChildren();
     phraseStart=null;
     const base = page.getViewport({ scale: 1 });
-    const maxWidth = Math.max(260, elements.viewport.clientWidth - 42);
-    // On phones, fitting a two-column A4 page to 340px makes words ~5px
-    // tall. Default to a readable column-sized page and allow horizontal pan.
-    const fitScale = window.innerWidth <= 760 ? Math.max(1.28, Math.min(1.5,maxWidth / base.width)) : Math.min(1.5, maxWidth / base.width);
+    const padding=getComputedStyle(elements.viewport);
+    const maxWidth=Math.max(80,elements.viewport.clientWidth-parseFloat(padding.paddingLeft)-parseFloat(padding.paddingRight));
+    const maxHeight=Math.max(80,elements.viewport.clientHeight-parseFloat(padding.paddingTop)-parseFloat(padding.paddingBottom));
+    const fit=$('pageFit').value;
+    const fitScale=fit==='page'?Math.min(maxWidth/base.width,maxHeight/base.height):
+      fit==='column'?Math.max(1.28,Math.min(1.5,maxWidth/base.width)):Math.min(1.5,maxWidth/base.width);
     const scale = fitScale * zoom;
     const viewport = page.getViewport({ scale }); currentPageViewport=viewport;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -2481,6 +2590,8 @@ nanoemulsion	наноэмульсия
     elements.viewport.scrollTop = 0; elements.viewport.scrollLeft = 0;
     renderedSource={page:pageIndexAtRender,id:documentIdAtRender,name:currentDoc?.name||''};
     readerReady = true;
+    if(position)restoreReadingPosition(position);
+    saveReadingProgress();updateBookmarkButton();
   }
 
   // Context is taken only from the actual PDF page. For two-column pages we
@@ -2862,6 +2973,7 @@ nanoemulsion	наноэмульсия
     if (lastModalFocus?.focus) lastModalFocus.focus({preventScroll:true});lastModalFocus=null;
   }
   document.addEventListener('keydown', e => {
+    if($('bookmarkDialog').open)return;
     if (e.key==='Escape' && !elements.modal.classList.contains('hidden')) {closeTerm();return;}
     if (!elements.modal.classList.contains('hidden')) {
       if (e.key==='Tab') {
@@ -2955,6 +3067,103 @@ nanoemulsion	наноэмульсия
       row.append(body,del); elements.glossaryList.append(row);
     }
   }
+  function validBookmarks(doc){
+    return (Array.isArray(doc?.bookmarks)?doc.bookmarks:[]).filter(b=>b&&typeof b.id==='string'&&Number.isSafeInteger(b.page)&&b.page>0&&(!doc.pages||b.page<=doc.pages));
+  }
+  function captureReadingPosition(){
+    const viewport=elements.viewport;
+    return {page:currentPage,fit:$('pageFit').value,zoom,
+      top:viewport.scrollTop/Math.max(1,viewport.scrollHeight-viewport.clientHeight),
+      left:viewport.scrollLeft/Math.max(1,viewport.scrollWidth-viewport.clientWidth)};
+  }
+  function restoreReadingPosition(position){
+    const ratio=value=>Number.isFinite(value)?Math.max(0,Math.min(1,value)):0;
+    elements.viewport.scrollTop=ratio(position.top)*Math.max(0,elements.viewport.scrollHeight-elements.viewport.clientHeight);
+    elements.viewport.scrollLeft=ratio(position.left)*Math.max(0,elements.viewport.scrollWidth-elements.viewport.clientWidth);
+  }
+  function saveReadingProgress(){
+    if(!readerReady||!currentDoc||renderedSource?.id!==currentDoc.id||renderedSource.page!==currentPage)return;
+    try{
+      localStorage.setItem('sg-last-document',currentDoc.id);
+      localStorage.setItem('sg-page-'+currentDoc.id,String(currentPage));
+      localStorage.setItem('sg-progress-'+currentDoc.id,JSON.stringify(captureReadingPosition()));
+    }catch(_){}
+  }
+  elements.viewport.addEventListener('scroll',saveReadingProgress,{passive:true});
+  window.addEventListener('pagehide',saveReadingProgress);
+  function updateBookmarkButton(){
+    const list=validBookmarks(currentDoc),atPage=list.some(b=>b.page===currentPage);
+    $('bookmarksBtn').disabled=!currentDoc||!readerReady;
+    $('bookmarksBtn').textContent=atPage?'★':'☆';
+    $('bookmarksBtn').title=`Закладки и заметки${list.length?' ('+list.length+')':''}`;
+  }
+  function renderBookmarks(){
+    const root=$('bookmarksList');root.replaceChildren();
+    const marks=validBookmarks(currentDoc).sort((a,b)=>a.page-b.page);
+    if(!marks.length){const empty=document.createElement('p');empty.className='muted';empty.textContent='Закладок пока нет. Сохраните место, где остановились.';root.append(empty);return;}
+    for(const mark of marks){
+      const item=document.createElement('article');item.className='bookmark-item';
+      const body=document.createElement('div'),open=document.createElement('button');
+      open.type='button';open.className='text-btn';open.textContent='Страница '+mark.page;open.setAttribute('aria-label','Открыть страницу '+mark.page);
+      open.addEventListener('click',async()=>{
+        if(bookmarkSaving)return;bookmarkSaving=true;
+        try{
+          const doc=await dbGet('documents',currentDoc.id);if(!doc)throw new Error('PDF уже удалён.');
+          doc.resumeBookmarkId=mark.id;await dbPut('documents',doc);currentDoc=doc;
+          $('bookmarkDialog').close();currentPage=mark.page;
+          if(['page','width','column'].includes(mark.fit))$('pageFit').value=mark.fit;
+          zoom=Number.isFinite(mark.zoom)?Math.max(.55,Math.min(2.5,mark.zoom)):1;
+          await renderPage(mark);
+        }catch(error){$('bookmarkFeedback').textContent='Не удалось открыть закладку: '+error.message;}
+        finally{bookmarkSaving=false;}
+      });
+      const note=document.createElement('p');note.textContent=String(mark.note||'Место чтения');
+      body.append(open,note);
+      if(mark.id===currentDoc.resumeBookmarkId){const label=document.createElement('small');label.textContent='Откроется при следующем запуске';body.append(label);}
+      const remove=document.createElement('button');remove.type='button';remove.className='icon-btn';remove.textContent='×';remove.setAttribute('aria-label','Удалить закладку: страница '+mark.page);
+      remove.addEventListener('click',async()=>{
+        if(bookmarkSaving||!confirm('Удалить эту закладку и заметку?'))return;
+        bookmarkSaving=true;
+        try{
+          const doc=await dbGet('documents',currentDoc.id);if(!doc)throw new Error('PDF уже удалён.');
+          doc.bookmarks=validBookmarks(doc).filter(b=>b.id!==mark.id);
+          if(doc.resumeBookmarkId===mark.id)doc.resumeBookmarkId=doc.bookmarks.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0))[0]?.id||'';
+          await dbPut('documents',doc);currentDoc=doc;renderBookmarks();updateBookmarkButton();
+          if(mark.page===bookmarkDraft?.page)$('bookmarkNote').value='';
+          $('bookmarkFeedback').textContent='Закладка удалена.';
+        }catch(error){$('bookmarkFeedback').textContent='Не удалось удалить: '+error.message;}
+        finally{bookmarkSaving=false;}
+      });
+      item.append(body,remove);root.append(item);
+    }
+  }
+  $('bookmarksBtn').addEventListener('click',()=>{
+    if(!readerReady||!currentDoc)return;
+    bookmarkDraft={documentId:currentDoc.id,...captureReadingPosition()};
+    $('bookmarkLocation').textContent=currentDoc.name+' · страница '+currentPage;
+    $('bookmarkNote').value=validBookmarks(currentDoc).find(b=>b.page===currentPage)?.note||'';
+    $('bookmarkFeedback').textContent='После запуска откроется выбранная закладка. Без закладки запоминается последняя страница.';
+    renderBookmarks();$('bookmarkDialog').showModal();
+  });
+  $('closeBookmarks').addEventListener('click',()=>$('bookmarkDialog').close());
+  $('saveBookmark').addEventListener('click',async()=>{
+    if(bookmarkSaving||!bookmarkDraft)return;
+    bookmarkSaving=true;$('saveBookmark').disabled=true;
+    const place={...bookmarkDraft},note=$('bookmarkNote').value.trim().slice(0,2000);
+    try{
+      const doc=await dbGet('documents',place.documentId);if(!doc)throw new Error('PDF уже удалён.');
+      const marks=validBookmarks(doc),previous=marks.find(b=>b.page===place.page);
+      const mark={...place,id:previous?.id||makeId(),note,updatedAt:Date.now()};delete mark.documentId;
+      doc.bookmarks=marks.filter(b=>b.page!==mark.page).concat(mark);doc.resumeBookmarkId=mark.id;
+      await dbPut('documents',doc);
+      if(currentDoc?.id===doc.id){currentDoc=doc;updateBookmarkButton();renderBookmarks();}
+      try{localStorage.setItem('sg-last-document',doc.id);}catch(_){}
+      $('bookmarkFeedback').textContent='Место сохранено: страница '+mark.page+'. Оно откроется при следующем запуске.';
+      showToast('Закладка и заметка сохранены.');
+    }catch(error){$('bookmarkFeedback').textContent='Не удалось сохранить закладку: '+error.message;}
+    finally{bookmarkSaving=false;$('saveBookmark').disabled=false;}
+  });
+
   async function exportEntries() {
     const filter=$('glossaryFilter').value;
     const verifiedOnly=Boolean($('exportVerifiedOnly')?.checked);
@@ -3294,7 +3503,7 @@ nanoemulsion	наноэмульсия
         });
       });
       await navigator.serviceWorker.ready;
-      const cache=await caches.open('scientific-glossary-shell-2.1.0');
+      const cache=await caches.open('scientific-glossary-shell-2.2.0');
       const manifestResponse=await cache.match(new URL('vendor/manifest.json',location.href));
       if(!manifestResponse)throw new Error('Offline installation incomplete');
       const manifest=await manifestResponse.json();
@@ -3325,12 +3534,19 @@ nanoemulsion	наноэмульсия
       for(const row of await dbAll('customDictionary')) if(row.term&&row.translation)dictionary.set(row.term,row.translation);
       for(const e of await dbAll('entries')) if(e.term&&e.translation)dictionary.set(normalizeTerm(e.term),e.translation);
       await refreshDocuments();await refreshGlossary();
-      $('readerHint').textContent='v2.1.0 · Нажмите слово или выделите фразу удержанием/протягиванием · Проверяйте примеры по статье';
+      $('readerHint').textContent='v2.2.0 · Нажмите слово или выделите фразу удержанием/протягиванием · Проверяйте примеры по статье';
       if((await dbAll('documents')).length) switchMobileView('read');
     } catch(error){console.error(error);showToast('Невозможно открыть локальное хранилище браузера.',7500);return;}
+    const initialOpenSerial=documentOpenSerial;
     try {
       await loadPdfJs();
       pdfjsLib.GlobalWorkerOptions.workerSrc=pdfJsWorkerUrl;
+      if(documentOpenSerial===initialOpenSerial){
+        const docs=await dbAll('documents');
+        let lastId='';try{lastId=localStorage.getItem('sg-last-document')||'';}catch(_){}
+        const last=docs.find(d=>d.id===lastId)||docs.filter(d=>d.addedAt).sort((a,b)=>b.addedAt-a.addedAt)[0];
+        if(last&&documentOpenSerial===initialOpenSerial)await openDocument(last.id);
+      }
     } catch(err){console.error(err);showToast('Не удалось загрузить PDF.js. Проверьте загрузку файлов приложения и повторите позже.',10000);}
     if(!window.isSecureContext && location.protocol!=='file:')showToast('Для локального хранения и офлайн-кэша откройте приложение по HTTPS.');
   }
